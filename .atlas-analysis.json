@@ -1,0 +1,93 @@
+{
+  "projectType": "saas",
+  "projectName": "TeamTalker",
+  "projectDescription": "A real-time collaborative whiteboarding tool with server management, role-based access control, and team collaboration features.",
+  "theme": "palm",
+  "primaryColor": "#7C3AED",
+  "lightColor": "#A78BFA",
+  "darkColor": "#5B21B6",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/servers",
+              "features/canvas",
+              "features/members",
+              "features/invites"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/authentication",
+              "guide/profile-management",
+              "guide/roles-permissions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/servers",
+              "api/members",
+              "api/profile"
+            ]
+          },
+          {
+            "group": "Technical",
+            "pages": [
+              "api/database-schema",
+              "api/real-time-sync",
+              "api/architecture"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Real-time collaborative whiteboarding using tldraw and Yjs",
+    "Server/workspace management with invite system",
+    "Role-based access control (Admin, Moderator, Guest)",
+    "User authentication via Clerk",
+    "File upload support with uploadthing",
+    "WebSocket-based real-time synchronization",
+    "Member management and permissions",
+    "Dark mode support"
+  ],
+  "publicApiSurface": [
+    "GET /api/servers - List all servers",
+    "GET /api/servers/[serverId] - Get server details",
+    "POST /api/servers - Create new server",
+    "PATCH /api/servers/[serverId] - Update server",
+    "DELETE /api/servers/[serverId] - Delete server",
+    "PATCH /api/servers/[serverId]/invite-code - Generate new invite code",
+    "PATCH /api/servers/[serverId]/leave - Leave server",
+    "PATCH /api/members/[memberId] - Update member role",
+    "DELETE /api/members/[memberId] - Remove member",
+    "GET /api/profile - Get current user profile",
+    "useYjsStore - Custom hook for real-time collaborative store"
+  ]
+}
