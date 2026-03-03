@@ -1,0 +1,339 @@
+---
+title: "Member Management"
+description: "Manage team members, roles, and permissions in your TeamTalker servers"
+---
+
+## Understanding Server Members
+
+Every TeamTalker server has a list of members who can access the collaborative canvas. Members are users who have joined the server via invite link or were added by an administrator.
+
+<Info>
+Each member has a role that determines their permissions within the server: **Admin**, **Moderator**, or **Guest**.
+</Info>
+
+## Member Roles
+
+TeamTalker uses a three-tier role system to manage permissions:
+
+<CardGroup cols={3}>
+  <Card title="Admin" icon="shield-halved" color="#e11d48">
+    Full server control including settings, member management, and deletion
+  </Card>
+  
+  <Card title="Moderator" icon="shield-check" color="#6366f1">
+    Can invite new members and use the canvas but cannot change settings
+  </Card>
+  
+  <Card title="Guest" icon="user" color="#64748b">
+    Basic access to view and collaborate on the canvas
+  </Card>
+</CardGroup>
+
+### Role Permissions Matrix
+
+<Tabs>
+  <Tab title="Admin">
+    **Full server permissions:**
+    
+    - Edit server name and image
+    - Generate and share invite links
+    - View all server members
+    - Change member roles
+    - Remove members from the server
+    - Delete the entire server
+    - Access and edit the collaborative canvas
+    
+    <Note>
+    The user who creates a server automatically becomes the Admin. Admins cannot leave their own server without deleting it.
+    </Note>
+  </Tab>
+  
+  <Tab title="Moderator">
+    **Limited administrative permissions:**
+    
+    - Generate and share invite links
+    - Access and edit the collaborative canvas
+    - View other server members
+    - Leave the server
+    
+    **Cannot:**
+    
+    - Change server settings
+    - Manage other members' roles
+    - Remove members
+    - Delete the server
+  </Tab>
+  
+  <Tab title="Guest">
+    **Basic member permissions:**
+    
+    - Access and edit the collaborative canvas
+    - View other server members
+    - Leave the server
+    
+    **Cannot:**
+    
+    - Invite new members
+    - Change server settings
+    - Manage members
+    - Delete the server
+    
+    <Info>
+    New members who join via invite link are assigned the Guest role by default.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Viewing Server Members
+
+All members can see the complete member list for their server:
+
+### From the Server Sidebar
+
+The server sidebar (right side of the screen) displays all members with:
+
+- **Profile Picture**: User's avatar from Clerk authentication
+- **Name**: User's display name
+- **Role Indicator**: Icon showing Admin or Moderator status
+  - Admin: Red shield alert icon
+  - Moderator: Blue shield check icon
+  - Guest: No icon
+
+### From the Members Modal (Admin Only)
+
+<Steps>
+  <Step title="Open Server Menu">
+    Click the server name in the header at the top of the screen.
+  </Step>
+  
+  <Step title="Select Manage Members">
+    Click **Manage Members** from the dropdown menu (only visible to Admins).
+  </Step>
+  
+  <Step title="View Member Details">
+    The Members modal displays:
+    - Total member count in the header
+    - Scrollable list of all members
+    - Each member's avatar, name, email, and role
+    - Action menu for managing each member (except yourself)
+  </Step>
+</Steps>
+
+<Note>
+The member count in the modal header shows the total number of members, including yourself.
+</Note>
+
+## Changing Member Roles
+
+<Warning>
+Only server Admins can change member roles. This permission cannot be delegated to Moderators.
+</Warning>
+
+To update a member's role:
+
+<Steps>
+  <Step title="Open Manage Members">
+    Click the server name header and select **Manage Members**.
+  </Step>
+  
+  <Step title="Locate the Member">
+    Scroll through the member list to find the user whose role you want to change.
+  </Step>
+  
+  <Step title="Open Member Menu">
+    Click the three-dot menu (⋮) icon on the right side of the member's row.
+  </Step>
+  
+  <Step title="Select New Role">
+    Choose either:
+    - **Guest**: Basic canvas access (shield icon)
+    - **Moderator**: Can invite others (shield check icon)
+    
+    The currently assigned role shows a checkmark.
+  </Step>
+  
+  <Step title="Confirm Change">
+    The role updates immediately. A loading spinner appears during the update, and the modal refreshes with the new role displayed.
+  </Step>
+</Steps>
+
+<Accordion title="Role Change Limitations">
+- You cannot change your own role
+- Only the server creator/Admin can change roles
+- There is no built-in way to transfer Admin status
+- Role changes are instant and affect permissions immediately
+</Accordion>
+
+## Removing Members from a Server
+
+Admins can remove members who should no longer have access:
+
+<Steps>
+  <Step title="Open Manage Members Modal">
+    Access the member management interface from the server header menu.
+  </Step>
+  
+  <Step title="Find the Member to Remove">
+    Locate the user in the scrollable member list.
+  </Step>
+  
+  <Step title="Open the Action Menu">
+    Click the three-dot menu icon next to the member's name.
+  </Step>
+  
+  <Step title="Click Kick">
+    Select **Kick** from the dropdown menu (appears with a gavel icon).
+  </Step>
+  
+  <Step title="Removal Confirmed">
+    The member is immediately removed from the server. The member list refreshes to show the updated roster.
+  </Step>
+</Steps>
+
+<Warning>
+**Important notes about removing members:**
+
+- Removed members lose all access to the server and canvas
+- They can only rejoin if sent a new invite link
+- You cannot remove yourself from the server
+- The action is immediate with no confirmation dialog
+</Warning>
+
+## Member List Display
+
+Members are displayed in a specific order for clarity:
+
+<Accordion title="Sorting and Organization">
+**Member List Sorting:**
+
+- Members are ordered by role (ascending)
+- Order: Admin → Moderator → Guest
+- Within each role, order may vary
+- Server creator (Admin) always appears in the list
+
+**Visual Indicators:**
+
+- **Admin**: Red shield alert icon (🛡️)
+- **Moderator**: Blue/indigo shield check icon (✓)
+- **Guest**: No role icon displayed
+- **Loading**: Spinner icon appears during role changes or removals
+</Accordion>
+
+## Member Information Displayed
+
+For each member in the list, you can see:
+
+<CardGroup cols={2}>
+  <Card title="Profile Avatar" icon="circle-user">
+    User's profile picture from Clerk authentication
+  </Card>
+  
+  <Card title="Display Name" icon="id-badge">
+    User's full name from their profile
+  </Card>
+  
+  <Card title="Email Address" icon="envelope">
+    User's registered email (shown in members modal)
+  </Card>
+  
+  <Card title="Role Badge" icon="shield">
+    Visual indicator of Admin or Moderator status
+  </Card>
+</CardGroup>
+
+## Managing Your Own Membership
+
+### Leaving a Server
+
+If you're not the Admin, you can leave a server at any time:
+
+1. Click the server name header
+2. Select **Leave Server** from the menu
+3. Confirm your decision in the dialog
+4. You'll be removed from the server and redirected
+
+<Info>
+After leaving, you'll need a new invite link to rejoin the server.
+</Info>
+
+### Admin Restrictions
+
+<Warning>
+Server Admins cannot leave their own servers. To stop managing a server, you must:
+
+1. Transfer ownership by promoting another member to Admin (currently requires database access)
+2. Have the new Admin remove you, OR
+3. Delete the server entirely
+</Warning>
+
+## Member Presence Indicators
+
+While the member list shows all server members, you can see who's actively using the canvas through:
+
+- **Cursor Presence**: Active users' cursors appear on the canvas
+- **User Colors**: Each user's chosen color identifies their activity
+- **Real-Time Updates**: Cursors and selections update as users work
+
+<Note>
+The member list doesn't show real-time "online" status, but active users are visible through their canvas presence.
+</Note>
+
+## Best Practices for Member Management
+
+<Steps>
+  <Step title="Assign Roles Thoughtfully">
+    Give Moderator status to trusted team members who need to invite others. Keep Admin access limited to those who need full control.
+  </Step>
+  
+  <Step title="Review Members Regularly">
+    Periodically check your member list and remove users who no longer need access to maintain security.
+  </Step>
+  
+  <Step title="Communicate Role Changes">
+    Let team members know when their roles change so they understand their permissions.
+  </Step>
+  
+  <Step title="Use Guests for External Collaborators">
+    Assign Guest roles to contractors, clients, or temporary collaborators who need canvas access only.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<Accordion title="I can't see the Manage Members option">
+The Manage Members menu item is only visible to server Admins. If you don't see it, you're likely a Moderator or Guest. Contact your server Admin if you need member management capabilities.
+</Accordion>
+
+<Accordion title="The member list isn't updating">
+If you change a role or remove a member and the list doesn't refresh:
+
+1. The API call may still be processing (look for loading spinners)
+2. Try refreshing your browser
+3. Check your network connection
+4. Ensure you have the latest version of TeamTalker
+</Accordion>
+
+<Accordion title="I removed someone by mistake">
+Member removal is immediate and cannot be undone through the UI. To restore access:
+
+1. Generate a new invite link
+2. Send it to the removed member
+3. They'll rejoin as a Guest by default
+4. Update their role if needed
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Generate Invites" icon="link" href="/features/invites">
+    Learn how to create invite links to add new members
+  </Card>
+  
+  <Card title="Server Settings" icon="server" href="/features/servers">
+    Manage your server's name, image, and other settings
+  </Card>
+  
+  <Card title="Canvas Collaboration" icon="paintbrush" href="/features/canvas">
+    Start working together on the collaborative whiteboard
+  </Card>
+</CardGroup>

@@ -1,0 +1,209 @@
+---
+title: 'Authentication'
+description: 'Learn how to sign up, sign in, and manage your session in TeamTalker'
+icon: 'key'
+---
+
+TeamTalker uses Clerk for secure authentication, providing a seamless sign-up and sign-in experience.
+
+## Sign Up Process
+
+Create your TeamTalker account in just a few steps:
+
+<Steps>
+  <Step title="Navigate to Sign Up">
+    Visit the TeamTalker application and click on the sign-up option.
+  </Step>
+  
+  <Step title="Enter Your Details">
+    Provide your information:
+    - First name and last name
+    - Email address
+    - Password (secure and unique)
+  </Step>
+  
+  <Step title="Verify Your Email">
+    Check your email inbox for a verification link from Clerk and click to verify your account.
+  </Step>
+  
+  <Step title="Complete Profile Creation">
+    Once verified, your profile is automatically created with:
+    - Your full name (firstName + lastName)
+    - Profile image (from Clerk)
+    - Email address
+    - Unique user ID
+  </Step>
+</Steps>
+
+<Info>
+  Your profile is automatically generated when you first sign up. The system creates a Profile record linked to your Clerk authentication.
+</Info>
+
+## Sign In Process
+
+Access your TeamTalker account:
+
+<Steps>
+  <Step title="Go to Sign In Page">
+    Navigate to the sign-in page at `/sign-in`.
+  </Step>
+  
+  <Step title="Enter Credentials">
+    Provide your registered email and password.
+  </Step>
+  
+  <Step title="Access Your Dashboard">
+    After successful authentication, you'll be redirected to:
+    - Your server dashboard (if you're a member of servers)
+    - The initial setup modal (if you're new and haven't joined any servers)
+  </Step>
+</Steps>
+
+## Sign Out
+
+Safely end your session:
+
+1. Click on your **User Avatar** in the navigation sidebar (bottom left)
+2. Select **Sign Out** from the dropdown menu
+3. You'll be redirected to the home page (`/`)
+
+<Note>
+  The UserButton component from Clerk provides a secure sign-out process that clears your session and authentication tokens.
+</Note>
+
+## Clerk Integration
+
+TeamTalker leverages Clerk for enterprise-grade authentication:
+
+### Features Provided by Clerk
+
+<AccordionGroup>
+  <Accordion title="Session Management">
+    - Automatic session handling with secure tokens
+    - Session persistence across browser tabs
+    - Automatic token refresh
+    - Secure session storage
+  </Accordion>
+  
+  <Accordion title="User Profile Sync">
+    - Real-time profile updates from Clerk
+    - Avatar image management
+    - Email verification and updates
+    - Name changes reflected automatically
+  </Accordion>
+  
+  <Accordion title="Security Features">
+    - Encrypted password storage
+    - Multi-factor authentication support
+    - Secure session tokens
+    - CSRF protection
+  </Accordion>
+</AccordionGroup>
+
+### ClerkProvider Configuration
+
+The entire application is wrapped in `ClerkProvider`, ensuring authentication context is available throughout:
+
+```tsx
+<ClerkProvider>
+  {/* Your app content */}
+</ClerkProvider>
+```
+
+## Session Management
+
+### Protected Routes
+
+All routes in TeamTalker are protected by default using Clerk's authentication middleware:
+
+<Info>
+  The middleware automatically protects all routes except `/api/uploadthing`. If you're not authenticated, you'll be redirected to sign in.
+</Info>
+
+**Public Routes:**
+- `/api/uploadthing` - File upload endpoint
+
+**Protected Routes:**
+- All other application routes
+- All API endpoints (except uploadthing)
+- Server pages and channels
+
+### How Sessions Work
+
+<Steps>
+  <Step title="Initial Authentication">
+    When you sign in, Clerk creates a secure session and stores authentication tokens.
+  </Step>
+  
+  <Step title="Profile Retrieval">
+    The `currentProfile()` function checks your Clerk session and retrieves your TeamTalker profile from the database.
+  </Step>
+  
+  <Step title="Session Validation">
+    Every protected request validates your session using the `auth()` helper from Clerk.
+  </Step>
+  
+  <Step title="Automatic Redirect">
+    If your session expires or is invalid, you're automatically redirected to sign in.
+  </Step>
+</Steps>
+
+### Profile Loading
+
+When you first access TeamTalker:
+
+1. The `initialProfile()` function checks if you're authenticated
+2. If not authenticated, you're redirected to sign in
+3. If authenticated, it looks for your existing profile in the database
+4. If no profile exists, it creates one with your Clerk user data
+5. Your profile is then used throughout the application
+
+<Warning>
+  Never share your authentication credentials. Clerk uses industry-standard security practices, but your password security is your responsibility.
+</Warning>
+
+## User Avatar Display
+
+Your profile image from Clerk is displayed throughout TeamTalker:
+
+- **Navigation Sidebar**: Bottom left corner with the UserButton
+- **Member Lists**: In server member views
+- **Chat Messages**: Next to your messages
+- **Profile Views**: In user profiles
+
+The avatar automatically updates when you change your profile image in Clerk.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Can't Sign In">
+    - Verify your email address is correct
+    - Check if you've verified your email
+    - Try resetting your password
+    - Clear browser cache and cookies
+  </Accordion>
+  
+  <Accordion title="Session Expired">
+    - Sessions expire after a period of inactivity
+    - Simply sign in again to create a new session
+    - Your data and servers are preserved
+  </Accordion>
+  
+  <Accordion title="Profile Not Loading">
+    - Ensure you're signed in to Clerk
+    - Check your internet connection
+    - Try refreshing the page
+    - Sign out and sign back in
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Profile Management" icon="user" href="/guide/profile-management">
+    Learn how to update your profile information
+  </Card>
+  <Card title="Roles & Permissions" icon="shield" href="/guide/roles-permissions">
+    Understand user roles in servers
+  </Card>
+</CardGroup>

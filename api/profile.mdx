@@ -1,0 +1,187 @@
+---
+title: 'Profile Endpoint'
+description: 'Get current authenticated user profile information'
+---
+
+## Get Current Profile
+
+<api>GET /api/profile</api>
+
+Retrieve the profile information for the currently authenticated user.
+
+### Authentication
+
+This endpoint requires authentication via Clerk. The profile is fetched based on the authenticated user's Clerk `userId`.
+
+### Request
+
+No parameters required.
+
+### Response
+
+<ResponseField name="profile" type="Profile">
+  The current user's profile object
+</ResponseField>
+
+<Expandable title="Profile Object">
+  <ResponseField name="id" type="string">
+    Unique profile identifier (UUID)
+  </ResponseField>
+  <ResponseField name="userId" type="string">
+    Clerk user ID (unique)
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    User's display name
+  </ResponseField>
+  <ResponseField name="imageUrl" type="string">
+    User's profile image URL
+  </ResponseField>
+  <ResponseField name="email" type="string">
+    User's email address
+  </ResponseField>
+  <ResponseField name="createdAt" type="string">
+    ISO 8601 timestamp of profile creation
+  </ResponseField>
+  <ResponseField name="updatedAt" type="string">
+    ISO 8601 timestamp of last update
+  </ResponseField>
+</Expandable>
+
+### Example Request
+
+```typescript
+const response = await fetch('/api/profile', {
+  method: 'GET',
+});
+
+const profile = await response.json();
+```
+
+### Response Example
+
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "userId": "user_2abc123xyz",
+  "name": "John Doe",
+  "imageUrl": "https://img.clerk.com/eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "email": "john.doe@example.com",
+  "createdAt": "2024-01-10T10:30:00.000Z",
+  "updatedAt": "2024-01-15T14:20:00.000Z"
+}
+```
+
+Source: `/app/api/profile/route.ts:4`
+
+---
+
+## Implementation Details
+
+### Profile Creation
+
+Profiles are typically created automatically during the initial authentication flow. The profile is linked to the Clerk `userId` and stores additional user information.
+
+### Profile Lookup
+
+The endpoint uses the `currentProfile()` helper function which:
+
+1. Retrieves the `userId` from Clerk's `auth()` function
+2. Queries the database for a profile matching that `userId`
+3. Returns the profile or `null` if not found
+
+Source: `/lib/current-profile.ts:4`
+
+### Usage in Application
+
+The `/api/profile` endpoint and `currentProfile()` helper are used throughout the application to:
+
+- Verify user authentication
+- Link users to servers and memberships
+- Display user information in the UI
+- Enforce authorization rules
+
+---
+
+## Profile Relationships
+
+The Profile model has relationships with:
+
+<ResponseField name="members" type="Member[]">
+  All server memberships for this user
+</ResponseField>
+
+<ResponseField name="servers" type="Server[]">
+  All servers owned by this user
+</ResponseField>
+
+See [Database Schema](/api/database-schema) for complete relationship details.
+
+---
+
+## Error Responses
+
+### 401 Unauthorized
+
+Returned when the user is not authenticated or their Clerk session is invalid:
+
+```
+Unauthorized
+```
+
+### 500 Internal Server Error
+
+Returned on unexpected server errors:
+
+```
+Internal Error
+```
+
+---
+
+## Authentication Flow
+
+### How Clerk Integration Works
+
+1. **User Signs In**: User authenticates through Clerk's UI components
+2. **Session Created**: Clerk creates and manages the session
+3. **API Request**: Frontend makes request to `/api/profile`
+4. **Session Verification**: `auth()` from `@clerk/nextjs` verifies the session
+5. **Profile Lookup**: Database is queried for the user's profile using `userId`
+6. **Response**: Profile data is returned to the client
+
+### Example Integration
+
+```typescript
+// In a Next.js component or API route
+import { currentProfile } from "@/lib/current-profile";
+
+const profile = await currentProfile();
+
+if (!profile) {
+  // User is not authenticated
+  return new Response("Unauthorized", { status: 401 });
+}
+
+// User is authenticated, use profile data
+console.log(profile.name);
+console.log(profile.email);
+```
+
+---
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Database Schema" icon="database" href="/api/database-schema">
+    View the complete Profile model structure
+  </Card>
+  <Card title="Server Endpoints" icon="server" href="/api/servers">
+    Learn how profiles relate to servers
+  </Card>
+  <Card title="Member Endpoints" icon="users" href="/api/members">
+    Understand profile membership management
+  </Card>
+  <Card title="API Overview" icon="book" href="/api/overview">
+    Authentication and API basics
+  </Card>
+</CardGroup>

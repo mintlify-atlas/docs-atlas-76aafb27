@@ -1,0 +1,456 @@
+---
+title: 'Database Schema'
+description: 'Prisma database models, relationships, and enums for TeamTalker'
+---
+
+## Overview
+
+TeamTalker uses [Prisma](https://prisma.io) as the ORM with PostgreSQL as the database. The schema defines three main models with relationships for managing users, servers, and memberships.
+
+## Database Provider
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+TeamTalker uses PostgreSQL as the database provider.
+
+---
+
+## Models
+
+### Profile
+
+Represents a user profile linked to a Clerk authentication account.
+
+<ParamField name="id" type="String" required>
+  UUID primary key (auto-generated)
+</ParamField>
+
+<ParamField name="userId" type="String" required>
+  Clerk user ID (unique constraint)
+</ParamField>
+
+<ParamField name="name" type="String" required>
+  User's display name
+</ParamField>
+
+<ParamField name="imageUrl" type="String" required>
+  URL to user's profile image
+</ParamField>
+
+<ParamField name="email" type="String" required>
+  User's email address
+</ParamField>
+
+<ParamField name="createdAt" type="DateTime" required>
+  Profile creation timestamp (default: now())
+</ParamField>
+
+<ParamField name="updatedAt" type="DateTime" required>
+  Last update timestamp (auto-updated)
+</ParamField>
+
+<ParamField name="members" type="Member[]" required>
+  Array of server memberships for this user
+</ParamField>
+
+<ParamField name="server" type="Server[]" required>
+  Array of servers owned by this user
+</ParamField>
+
+#### Prisma Schema
+
+```prisma
+model Profile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  name      String
+  imageUrl  String
+  email     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   Member[]
+  server    Server[]
+}
+```
+
+Source: `/prisma/schema.prisma:10`
+
+---
+
+### Server
+
+Represents a collaboration server/workspace where members can collaborate.
+
+<ParamField name="id" type="String" required>
+  UUID primary key (auto-generated)
+</ParamField>
+
+<ParamField name="name" type="String" required>
+  Server name
+</ParamField>
+
+<ParamField name="imageUrl" type="String" required>
+  URL to server image/icon
+</ParamField>
+
+<ParamField name="inviteCode" type="String" required>
+  Unique invite code for joining the server (unique constraint)
+</ParamField>
+
+<ParamField name="profileId" type="String" required>
+  ID of the server owner's profile (foreign key)
+</ParamField>
+
+<ParamField name="createdAt" type="DateTime" required>
+  Server creation timestamp (default: now())
+</ParamField>
+
+<ParamField name="updatedAt" type="DateTime" required>
+  Last update timestamp (auto-updated)
+</ParamField>
+
+<ParamField name="members" type="Member[]" required>
+  Array of server members
+</ParamField>
+
+<ParamField name="profile" type="Profile" required>
+  Server owner's profile (relation)
+</ParamField>
+
+#### Relations
+
+- **profile**: Many-to-one relation with Profile
+  - Foreign key: `profileId` references `Profile.id`
+  - Cascade delete: Deleting a profile deletes all their servers
+
+#### Indexes
+
+- Index on `profileId` for efficient server lookups by owner
+
+#### Prisma Schema
+
+```prisma
+model Server {
+  id         String   @id @default(uuid())
+  name       String
+  imageUrl   String
+  inviteCode String   @unique
+  profileId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  members    Member[]
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+```
+
+Source: `/prisma/schema.prisma:22`
+
+---
+
+### Member
+
+Represents a user's membership in a server with a specific role.
+
+<ParamField name="id" type="String" required>
+  UUID primary key (auto-generated)
+</ParamField>
+
+<ParamField name="role" type="MemberRole" required>
+  Member's role in the server (default: GUEST)
+</ParamField>
+
+<ParamField name="profileId" type="String" required>
+  ID of the member's profile (foreign key)
+</ParamField>
+
+<ParamField name="serverId" type="String" required>
+  ID of the server (foreign key)
+</ParamField>
+
+<ParamField name="createdAt" type="DateTime" required>
+  Membership creation timestamp (default: now())
+</ParamField>
+
+<ParamField name="updatedAt" type="DateTime" required>
+  Last update timestamp (auto-updated)
+</ParamField>
+
+<ParamField name="profile" type="Profile" required>
+  Member's profile (relation)
+</ParamField>
+
+<ParamField name="server" type="Server" required>
+  Server (relation)
+</ParamField>
+
+#### Relations
+
+- **profile**: Many-to-one relation with Profile
+  - Foreign key: `profileId` references `Profile.id`
+  - Cascade delete: Deleting a profile deletes all their memberships
+
+- **server**: Many-to-one relation with Server
+  - Foreign key: `serverId` references `Server.id`
+  - Cascade delete: Deleting a server deletes all memberships
+
+#### Indexes
+
+- Index on `profileId` for efficient lookups of user memberships
+- Index on `serverId` for efficient lookups of server members
+
+#### Prisma Schema
+
+```prisma
+model Member {
+  id        String     @id @default(uuid())
+  role      MemberRole @default(GUEST)
+  profileId String
+  serverId  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  profile   Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  server    Server     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([serverId])
+}
+```
+
+Source: `/prisma/schema.prisma:36`
+
+---
+
+## Enums
+
+### MemberRole
+
+Defines the permission levels for server members.
+
+<ParamField name="ADMIN" type="enum">
+  Full administrative access to the server. Can manage server settings, members, and delete the server.
+</ParamField>
+
+<ParamField name="MODERATOR" type="enum">
+  Elevated permissions for moderation tasks. Cannot manage server settings or other members.
+</ParamField>
+
+<ParamField name="GUEST" type="enum">
+  Standard member access. Default role for new members.
+</ParamField>
+
+#### Prisma Schema
+
+```prisma
+enum MemberRole {
+  ADMIN
+  MODERATOR
+  GUEST
+}
+```
+
+Source: `/prisma/schema.prisma:50`
+
+---
+
+### ChannelType
+
+Defines channel types (currently unused in the application).
+
+<ParamField name="TEXT" type="enum">
+  Text-based channel
+</ParamField>
+
+<ParamField name="AUDIO" type="enum">
+  Audio channel
+</ParamField>
+
+<ParamField name="VIDEO" type="enum">
+  Video channel
+</ParamField>
+
+#### Prisma Schema
+
+```prisma
+enum ChannelType {
+  TEXT
+  AUDIO
+  VIDEO
+}
+```
+
+Source: `/prisma/schema.prisma:56`
+
+<Note>
+  The `ChannelType` enum is defined in the schema but not currently used by any models. This may be reserved for future channel features.
+</Note>
+
+---
+
+## Relationships Diagram
+
+```
+Profile (User)
+├── members[] ────────┐
+└── servers[]         │
+                      │
+                      ▼
+                   Member
+                      │
+                      └─────► Server
+                                ├── members[]
+                                └── profile (owner)
+```
+
+### Key Relationships
+
+1. **Profile → Server** (One-to-Many)
+   - A user can own multiple servers
+   - Each server has one owner
+
+2. **Profile → Member** (One-to-Many)
+   - A user can have multiple memberships
+   - Each membership belongs to one user
+
+3. **Server → Member** (One-to-Many)
+   - A server can have multiple members
+   - Each membership belongs to one server
+
+---
+
+## Cascade Deletes
+
+The schema implements cascade deletes to maintain referential integrity:
+
+### Deleting a Profile
+
+When a profile is deleted:
+- All `Server` records owned by that profile are deleted
+- All `Member` records for that profile are deleted
+
+### Deleting a Server
+
+When a server is deleted:
+- All `Member` records for that server are deleted
+
+---
+
+## Database Migrations
+
+Prisma manages database migrations. To apply schema changes:
+
+```bash
+# Generate Prisma Client
+npx prisma generate
+
+# Create and apply migrations
+npx prisma migrate dev
+
+# Apply migrations in production
+npx prisma migrate deploy
+```
+
+---
+
+## Usage Examples
+
+### Query Server with Members
+
+```typescript
+const server = await db.server.findUnique({
+  where: { id: serverId },
+  include: {
+    members: {
+      include: {
+        profile: true,
+      },
+      orderBy: {
+        role: 'asc',
+      },
+    },
+  },
+});
+```
+
+Source: `/app/api/servers/[serverId]/route.ts:70`
+
+### Create Server with Admin Member
+
+```typescript
+const server = await db.server.create({
+  data: {
+    profileId: profile.id,
+    name,
+    imageUrl,
+    inviteCode: uuidv4(),
+    members: {
+      create: [{ profileId: profile.id, role: MemberRole.ADMIN }],
+    },
+  },
+});
+```
+
+Source: `/app/api/servers/route.ts:17`
+
+### Update Member Role
+
+```typescript
+const server = await db.server.update({
+  where: {
+    id: serverId,
+    profileId: profile.id,
+  },
+  data: {
+    members: {
+      update: {
+        where: {
+          id: params.memberId,
+          profileId: {
+            not: profile.id,
+          },
+        },
+        data: {
+          role,
+        },
+      },
+    },
+  },
+  include: {
+    members: {
+      include: {
+        profile: true,
+      },
+      orderBy: {
+        role: 'asc',
+      },
+    },
+  },
+});
+```
+
+Source: `/app/api/members/[memberId]/route.ts:28`
+
+---
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Server Endpoints" icon="server" href="/api/servers">
+    API endpoints for server operations
+  </Card>
+  <Card title="Member Endpoints" icon="users" href="/api/members">
+    API endpoints for member management
+  </Card>
+  <Card title="Profile Endpoint" icon="user" href="/api/profile">
+    Get current user profile
+  </Card>
+  <Card title="Prisma Documentation" icon="book" href="https://www.prisma.io/docs">
+    Official Prisma documentation
+  </Card>
+</CardGroup>

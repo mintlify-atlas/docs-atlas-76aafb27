@@ -1,0 +1,305 @@
+---
+title: 'Member Endpoints'
+description: 'API endpoints for managing server members and roles'
+---
+
+## Update Member Role
+
+<api>PATCH /api/members/[memberId]</api>
+
+Update a member's role within a server. Only the server owner can update member roles.
+
+### Parameters
+
+<ParamField path="memberId" type="string" required>
+  The unique identifier of the member to update
+</ParamField>
+
+<ParamField query="serverId" type="string" required>
+  The server ID where the member belongs (passed as query parameter)
+</ParamField>
+
+### Request Body
+
+<ParamField body="role" type="MemberRole" required>
+  The new role to assign to the member
+</ParamField>
+
+<Expandable title="MemberRole Enum">
+  <ParamField name="ADMIN" type="enum">
+    Full administrative access to the server
+  </ParamField>
+  <ParamField name="MODERATOR" type="enum">
+    Elevated permissions for moderation
+  </ParamField>
+  <ParamField name="GUEST" type="enum">
+    Standard member access
+  </ParamField>
+</Expandable>
+
+### Authorization
+
+Only the server owner can update member roles. The owner cannot change their own role.
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The updated server object with all members and their profiles
+</ResponseField>
+
+<Expandable title="Server Response">
+  <ResponseField name="id" type="string">
+    Server UUID
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Server name
+  </ResponseField>
+  <ResponseField name="imageUrl" type="string">
+    Server image URL
+  </ResponseField>
+  <ResponseField name="inviteCode" type="string">
+    Server invite code
+  </ResponseField>
+  <ResponseField name="profileId" type="string">
+    Server owner's profile ID
+  </ResponseField>
+  <ResponseField name="members" type="Member[]">
+    Array of all server members (ordered by role: ADMIN, MODERATOR, GUEST)
+  </ResponseField>
+  <ResponseField name="createdAt" type="string">
+    ISO 8601 timestamp
+  </ResponseField>
+  <ResponseField name="updatedAt" type="string">
+    ISO 8601 timestamp
+  </ResponseField>
+</Expandable>
+
+### Implementation Details
+
+- The server owner (`profileId` matches server's `profileId`) can update roles
+- The owner cannot update their own role (prevented by `profileId: { not: profile.id }`)
+- Response includes all members with their profiles, ordered by role ascending
+
+### Example
+
+```typescript
+const memberId = "abc123-def456-ghi789";
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/members/${memberId}?serverId=${serverId}`, {
+  method: 'PATCH',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    role: 'MODERATOR',
+  }),
+});
+
+const server = await response.json();
+```
+
+### Response Example
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "My Server",
+  "imageUrl": "https://utfs.io/f/abc123.png",
+  "inviteCode": "a1b2c3d4",
+  "profileId": "owner-profile-id",
+  "members": [
+    {
+      "id": "member-1",
+      "role": "ADMIN",
+      "profileId": "owner-profile-id",
+      "serverId": "550e8400-e29b-41d4-a716-446655440000",
+      "profile": {
+        "id": "owner-profile-id",
+        "userId": "clerk_user_123",
+        "name": "Server Owner",
+        "imageUrl": "https://img.clerk.com/user.png",
+        "email": "owner@example.com",
+        "createdAt": "2024-01-10T10:00:00.000Z",
+        "updatedAt": "2024-01-10T10:00:00.000Z"
+      },
+      "createdAt": "2024-01-10T10:00:00.000Z",
+      "updatedAt": "2024-01-10T10:00:00.000Z"
+    },
+    {
+      "id": "abc123-def456-ghi789",
+      "role": "MODERATOR",
+      "profileId": "user-profile-id",
+      "serverId": "550e8400-e29b-41d4-a716-446655440000",
+      "profile": {
+        "id": "user-profile-id",
+        "userId": "clerk_user_456",
+        "name": "John Doe",
+        "imageUrl": "https://img.clerk.com/user2.png",
+        "email": "john@example.com",
+        "createdAt": "2024-01-12T14:00:00.000Z",
+        "updatedAt": "2024-01-12T14:00:00.000Z"
+      },
+      "createdAt": "2024-01-12T14:30:00.000Z",
+      "updatedAt": "2024-01-15T16:20:00.000Z"
+    }
+  ],
+  "createdAt": "2024-01-10T10:00:00.000Z",
+  "updatedAt": "2024-01-15T16:20:00.000Z"
+}
+```
+
+Source: `/app/api/members/[memberId]/route.ts:5`
+
+---
+
+## Remove Member
+
+<api>DELETE /api/members/[memberId]</api>
+
+Remove a member from a server. Only the server owner can remove members. The owner cannot remove themselves.
+
+### Parameters
+
+<ParamField path="memberId" type="string" required>
+  The unique identifier of the member to remove
+</ParamField>
+
+<ParamField query="serverId" type="string" required>
+  The server ID where the member belongs (passed as query parameter)
+</ParamField>
+
+### Authorization
+
+Only the server owner can remove members. The owner cannot remove themselves.
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The updated server object with remaining members and their profiles
+</ResponseField>
+
+### Implementation Details
+
+- Only the server owner (`profileId` matches server's `profileId`) can remove members
+- The owner cannot remove themselves (prevented by `profileId: { not: profile.id }`)
+- Response includes all remaining members with profiles, ordered by role
+
+### Example
+
+```typescript
+const memberId = "abc123-def456-ghi789";
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/members/${memberId}?serverId=${serverId}`, {
+  method: 'DELETE',
+});
+
+const server = await response.json();
+```
+
+### Response Example
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "My Server",
+  "imageUrl": "https://utfs.io/f/abc123.png",
+  "inviteCode": "a1b2c3d4",
+  "profileId": "owner-profile-id",
+  "members": [
+    {
+      "id": "member-1",
+      "role": "ADMIN",
+      "profileId": "owner-profile-id",
+      "serverId": "550e8400-e29b-41d4-a716-446655440000",
+      "profile": {
+        "id": "owner-profile-id",
+        "userId": "clerk_user_123",
+        "name": "Server Owner",
+        "imageUrl": "https://img.clerk.com/user.png",
+        "email": "owner@example.com",
+        "createdAt": "2024-01-10T10:00:00.000Z",
+        "updatedAt": "2024-01-10T10:00:00.000Z"
+      },
+      "createdAt": "2024-01-10T10:00:00.000Z",
+      "updatedAt": "2024-01-10T10:00:00.000Z"
+    }
+  ],
+  "createdAt": "2024-01-10T10:00:00.000Z",
+  "updatedAt": "2024-01-15T16:25:00.000Z"
+}
+```
+
+Source: `/app/api/members/[memberId]/route.ts:67`
+
+---
+
+## Member Roles
+
+TeamTalker has three member role levels:
+
+### ADMIN
+
+- Full control over the server
+- Can update server name and image
+- Can regenerate invite codes
+- Can manage all members (change roles, remove members)
+- Can delete the server
+- Automatically assigned to the server creator
+
+### MODERATOR
+
+- Elevated permissions for content moderation
+- Cannot manage server settings or other members
+- Assigned by the server owner
+
+### GUEST
+
+- Standard member access
+- Default role for new members
+- Can participate in server activities
+- Cannot modify server settings or manage members
+
+## Error Responses
+
+### 401 Unauthorized
+
+Returned when the user is not authenticated:
+
+```
+Unauthorized
+```
+
+### 400 Bad Request
+
+Returned when required parameters are missing:
+
+```
+Server ID missing
+```
+
+or
+
+```
+Member ID missing
+```
+
+### 500 Internal Server Error
+
+Returned on unexpected server errors:
+
+```
+Internal Error
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Server Endpoints" icon="server" href="/api/servers">
+    Manage servers and memberships
+  </Card>
+  <Card title="Database Schema" icon="database" href="/api/database-schema">
+    Learn about the Member model structure
+  </Card>
+</CardGroup>

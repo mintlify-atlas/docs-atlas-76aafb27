@@ -1,0 +1,302 @@
+---
+title: 'Profile Management'
+description: 'Manage your user profile, update your information, and customize your presence'
+icon: 'user'
+---
+
+Your TeamTalker profile represents your identity across all servers and channels. Learn how to view and manage your profile information.
+
+## Your Profile Information
+
+Your TeamTalker profile stores the following information:
+
+<CardGroup cols={2}>
+  <Card title="User ID" icon="fingerprint">
+    Unique identifier linked to your Clerk account
+  </Card>
+  <Card title="Name" icon="signature">
+    Your display name (first + last name)
+  </Card>
+  <Card title="Email" icon="envelope">
+    Your verified email address
+  </Card>
+  <Card title="Profile Image" icon="image">
+    Your avatar displayed across TeamTalker
+  </Card>
+</CardGroup>
+
+### Profile Data Structure
+
+Your profile includes:
+
+- **Unique Profile ID**: UUID generated when your profile is created
+- **User ID**: Links to your Clerk authentication account
+- **Display Name**: Combined first and last name from Clerk
+- **Profile Image URL**: Avatar image from Clerk
+- **Email Address**: Verified email from your Clerk account
+- **Created At**: Timestamp when you joined TeamTalker
+- **Updated At**: Last time your profile was modified
+
+<Info>
+  Your profile is automatically created when you first sign up and is synced with your Clerk account information.
+</Info>
+
+## Viewing Your Profile
+
+You can view your profile information in several places:
+
+### Navigation Sidebar
+
+<Steps>
+  <Step title="Locate Your Avatar">
+    Find your profile avatar at the bottom of the left navigation sidebar.
+  </Step>
+  
+  <Step title="Click Your Avatar">
+    Click on the UserButton to open your profile menu.
+  </Step>
+  
+  <Step title="View Profile Options">
+    Access profile settings, account management, and sign-out options.
+  </Step>
+</Steps>
+
+### Server Member Lists
+
+Your profile appears in server member lists showing:
+- Your profile image
+- Your display name
+- Your email address
+- Your role badge (Admin, Moderator, or Guest)
+
+<Note>
+  Your profile information is consistent across all servers you're a member of.
+</Note>
+
+## Editing Your Profile
+
+Profile updates are managed through your Clerk account, which automatically syncs with TeamTalker.
+
+### Update Your Name
+
+<Steps>
+  <Step title="Access Clerk Settings">
+    Click your avatar in the navigation sidebar and select account settings.
+  </Step>
+  
+  <Step title="Edit Name Fields">
+    Update your first name and/or last name in the Clerk profile settings.
+  </Step>
+  
+  <Step title="Save Changes">
+    Your display name in TeamTalker updates automatically based on the combined first and last name.
+  </Step>
+</Steps>
+
+### Update Your Profile Image
+
+<Steps>
+  <Step title="Open Clerk Profile">
+    Navigate to your Clerk account settings via the UserButton.
+  </Step>
+  
+  <Step title="Upload New Image">
+    Click on your current avatar and upload a new profile picture.
+  </Step>
+  
+  <Step title="Automatic Sync">
+    The new image syncs automatically to TeamTalker and appears across all servers.
+  </Step>
+</Steps>
+
+<Warning>
+  Profile image changes may take a few moments to propagate across all views in the application.
+</Warning>
+
+### Update Your Email
+
+Email updates must be done through Clerk:
+
+1. Access your Clerk account settings
+2. Add or change your email address
+3. Verify the new email via the verification link
+4. The updated email automatically syncs to your TeamTalker profile
+
+<Info>
+  Email verification is required for security. You'll receive a verification link in your new email inbox.
+</Info>
+
+## Profile Avatar Display
+
+Your avatar image is displayed in multiple locations throughout TeamTalker:
+
+### Display Locations
+
+<AccordionGroup>
+  <Accordion title="Navigation Sidebar">
+    Your avatar appears in the UserButton at the bottom left of the navigation sidebar with:
+    - Size: 48x48 pixels
+    - Rounded circle style
+    - Click to access account settings
+  </Accordion>
+  
+  <Accordion title="Member Lists">
+    When viewing server members:
+    - Size: 7-10 responsive sizing (smaller on mobile)
+    - Displays next to your name
+    - Shows your role badge
+  </Accordion>
+  
+  <Accordion title="Server Sidebar">
+    In server member views:
+    - Appears next to your username
+    - Shows online/offline status (when implemented)
+    - Indicates your role in the server
+  </Accordion>
+</AccordionGroup>
+
+### Avatar Component
+
+TeamTalker uses a custom `UserAvatar` component that:
+- Displays your profile image from the `imageUrl` field
+- Provides responsive sizing for different screen sizes
+- Uses fallback behavior if image fails to load
+- Maintains consistent styling across the application
+
+## Profile Privacy
+
+Understand what information is visible to other users:
+
+### Visible to All Server Members
+
+<CardGroup cols={2}>
+  <Card title="Display Name" icon="user">
+    Your full name is visible to all members in shared servers
+  </Card>
+  <Card title="Profile Image" icon="image">
+    Your avatar is shown in member lists and chat
+  </Card>
+  <Card title="Email Address" icon="envelope">
+    Visible in member management views (Admin access)
+  </Card>
+  <Card title="Server Role" icon="shield">
+    Your role badge is displayed next to your name
+  </Card>
+</CardGroup>
+
+<Note>
+  Your email address is visible to server administrators in the member management interface.
+</Note>
+
+### Private Information
+
+- **User ID**: Internal identifier, not displayed to users
+- **Profile ID**: Database identifier, not shown in UI
+- **Authentication Details**: Managed securely by Clerk
+
+## Retrieving Your Profile Data
+
+For developers or API access, you can retrieve your profile:
+
+### API Endpoint
+
+```bash
+GET /api/profile
+```
+
+**Response:**
+```json
+{
+  "id": "profile-uuid",
+  "userId": "clerk-user-id",
+  "name": "John Doe",
+  "imageUrl": "https://clerk.com/avatar.jpg",
+  "email": "john@example.com",
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-15T00:00:00.000Z"
+}
+```
+
+<Info>
+  You must be authenticated to access this endpoint. Unauthorized requests return a 401 status.
+</Info>
+
+## Profile Relationships
+
+Your profile is connected to other entities in TeamTalker:
+
+### Server Ownership
+
+- **Servers Created**: List of servers where you're the owner
+- **Server Count**: Track how many servers you've created
+- **Management Rights**: Full control over your created servers
+
+### Server Memberships
+
+- **Member Records**: One membership per server you've joined
+- **Role Assignment**: Each membership has an associated role
+- **Server Access**: Memberships determine which servers you can access
+
+<Note>
+  A single profile can have multiple server memberships, each with different roles.
+</Note>
+
+## Profile Creation Process
+
+Understand how your profile is created:
+
+<Steps>
+  <Step title="First Sign In">
+    When you first sign in after creating a Clerk account, TeamTalker checks for an existing profile.
+  </Step>
+  
+  <Step title="Profile Lookup">
+    The system searches for a profile linked to your Clerk user ID.
+  </Step>
+  
+  <Step title="Auto-Creation">
+    If no profile exists, TeamTalker automatically creates one with:
+    - Your Clerk user ID
+    - Combined first and last name
+    - Profile image URL from Clerk
+    - Email address from Clerk
+  </Step>
+  
+  <Step title="Database Storage">
+    Your profile is saved in the PostgreSQL database with timestamps.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Profile Image Not Updating">
+    - Clear browser cache and refresh
+    - Verify the image was updated in Clerk
+    - Wait a few minutes for sync to complete
+    - Try signing out and back in
+  </Accordion>
+  
+  <Accordion title="Name Not Displaying Correctly">
+    - Check your first and last name in Clerk settings
+    - Ensure both fields are populated
+    - Update in Clerk and refresh TeamTalker
+  </Accordion>
+  
+  <Accordion title="Profile Data Missing">
+    - Verify you're signed in to Clerk
+    - Check if your profile was created (sign out and back in)
+    - Contact support if profile creation fails
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/guide/authentication">
+    Learn about sign in and session management
+  </Card>
+  <Card title="Roles & Permissions" icon="shield" href="/guide/roles-permissions">
+    Understand role-based access control
+  </Card>
+</CardGroup>

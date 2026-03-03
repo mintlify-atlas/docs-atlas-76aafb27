@@ -1,0 +1,466 @@
+---
+title: 'Server Endpoints'
+description: 'API endpoints for managing servers, invites, and server memberships'
+---
+
+## List Servers
+
+<api>GET /api/servers</api>
+
+Retrieve all servers where the authenticated user is a member.
+
+### Request
+
+No parameters required.
+
+### Response
+
+<ResponseField name="servers" type="Server[]">
+  Array of server objects where the user is a member
+</ResponseField>
+
+<Expandable title="Server Object">
+  <ResponseField name="id" type="string">
+    Unique server identifier (UUID)
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Server name
+  </ResponseField>
+  <ResponseField name="imageUrl" type="string">
+    Server image/icon URL
+  </ResponseField>
+  <ResponseField name="inviteCode" type="string">
+    Unique invite code for joining the server
+  </ResponseField>
+  <ResponseField name="profileId" type="string">
+    ID of the server owner's profile
+  </ResponseField>
+  <ResponseField name="createdAt" type="string">
+    ISO 8601 timestamp of server creation
+  </ResponseField>
+  <ResponseField name="updatedAt" type="string">
+    ISO 8601 timestamp of last update
+  </ResponseField>
+</Expandable>
+
+### Example
+
+```typescript
+const response = await fetch('/api/servers', {
+  method: 'GET',
+});
+
+const servers = await response.json();
+```
+
+### Response Example
+
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "My Team Server",
+    "imageUrl": "https://utfs.io/f/abc123.png",
+    "inviteCode": "a1b2c3d4",
+    "profileId": "123e4567-e89b-12d3-a456-426614174000",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+]
+```
+
+Source: `/app/api/servers/route.ts:36`
+
+---
+
+## Get Server
+
+<api>GET /api/servers/[serverId]</api>
+
+Retrieve a specific server with its members and member profiles.
+
+### Parameters
+
+<ParamField path="serverId" type="string" required>
+  The unique identifier of the server
+</ParamField>
+
+### Response
+
+<ResponseField name="server" type="Server">
+  Server object with nested members array
+</ResponseField>
+
+<Expandable title="Server Object with Members">
+  <ResponseField name="id" type="string">
+    Server UUID
+  </ResponseField>
+  <ResponseField name="name" type="string">
+    Server name
+  </ResponseField>
+  <ResponseField name="imageUrl" type="string">
+    Server image URL
+  </ResponseField>
+  <ResponseField name="inviteCode" type="string">
+    Server invite code
+  </ResponseField>
+  <ResponseField name="profileId" type="string">
+    Server owner's profile ID
+  </ResponseField>
+  <ResponseField name="members" type="Member[]">
+    Array of server members, ordered by role (ADMIN, MODERATOR, GUEST)
+  </ResponseField>
+  <ResponseField name="createdAt" type="string">
+    ISO timestamp
+  </ResponseField>
+  <ResponseField name="updatedAt" type="string">
+    ISO timestamp
+  </ResponseField>
+</Expandable>
+
+<Expandable title="Member Object">
+  <ResponseField name="id" type="string">
+    Member UUID
+  </ResponseField>
+  <ResponseField name="role" type="MemberRole">
+    One of: ADMIN, MODERATOR, GUEST
+  </ResponseField>
+  <ResponseField name="profileId" type="string">
+    User's profile ID
+  </ResponseField>
+  <ResponseField name="serverId" type="string">
+    Server ID
+  </ResponseField>
+  <ResponseField name="profile" type="Profile">
+    Nested profile object with user information
+  </ResponseField>
+  <ResponseField name="createdAt" type="string">
+    ISO timestamp
+  </ResponseField>
+  <ResponseField name="updatedAt" type="string">
+    ISO timestamp
+  </ResponseField>
+</Expandable>
+
+### Example
+
+```typescript
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/servers/${serverId}`, {
+  method: 'GET',
+});
+
+const server = await response.json();
+```
+
+Source: `/app/api/servers/[serverId]/route.ts:60`
+
+---
+
+## Create Server
+
+<api>POST /api/servers</api>
+
+Create a new server. The authenticated user becomes the server owner with ADMIN role.
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  Name of the server
+</ParamField>
+
+<ParamField body="imageUrl" type="string" required>
+  URL of the server image/icon
+</ParamField>
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The newly created server object
+</ResponseField>
+
+### Implementation Details
+
+When a server is created:
+- A unique `inviteCode` is generated using UUID v4
+- The creator is automatically added as a member with `MemberRole.ADMIN`
+- The server `profileId` is set to the creator's profile ID
+
+### Example
+
+```typescript
+const response = await fetch('/api/servers', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: 'My New Server',
+    imageUrl: 'https://utfs.io/f/xyz789.png',
+  }),
+});
+
+const server = await response.json();
+```
+
+### Response Example
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "My New Server",
+  "imageUrl": "https://utfs.io/f/xyz789.png",
+  "inviteCode": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "profileId": "123e4567-e89b-12d3-a456-426614174000",
+  "createdAt": "2024-01-15T14:30:00.000Z",
+  "updatedAt": "2024-01-15T14:30:00.000Z"
+}
+```
+
+Source: `/app/api/servers/route.ts:8`
+
+---
+
+## Update Server
+
+<api>PATCH /api/servers/[serverId]</api>
+
+Update server name and/or image. Only the server owner can update the server.
+
+### Parameters
+
+<ParamField path="serverId" type="string" required>
+  The unique identifier of the server to update
+</ParamField>
+
+### Request Body
+
+<ParamField body="name" type="string" optional>
+  New server name
+</ParamField>
+
+<ParamField body="imageUrl" type="string" optional>
+  New server image URL
+</ParamField>
+
+### Authorization
+
+Only the server owner (user whose `profileId` matches the server's `profileId`) can update the server. Returns 403 Forbidden otherwise.
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The updated server object
+</ResponseField>
+
+### Example
+
+```typescript
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/servers/${serverId}`, {
+  method: 'PATCH',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    name: 'Updated Server Name',
+    imageUrl: 'https://utfs.io/f/new-image.png',
+  }),
+});
+
+const updatedServer = await response.json();
+```
+
+Source: `/app/api/servers/[serverId]/route.ts:5`
+
+---
+
+## Delete Server
+
+<api>DELETE /api/servers/[serverId]</api>
+
+Permanently delete a server. Only the server owner can delete the server.
+
+### Parameters
+
+<ParamField path="serverId" type="string" required>
+  The unique identifier of the server to delete
+</ParamField>
+
+### Authorization
+
+Only the server owner can delete the server. Returns 403 Forbidden otherwise.
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The deleted server object
+</ResponseField>
+
+### Database Cascade
+
+Due to Prisma cascade delete configuration, deleting a server also deletes:
+- All server members
+- All related server data
+
+### Example
+
+```typescript
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/servers/${serverId}`, {
+  method: 'DELETE',
+});
+
+const deletedServer = await response.json();
+```
+
+Source: `/app/api/servers/[serverId]/route.ts:35`
+
+---
+
+## Regenerate Invite Code
+
+<api>PATCH /api/servers/[serverId]/invite-code</api>
+
+Generate a new invite code for the server. Only the server owner can regenerate the invite code.
+
+### Parameters
+
+<ParamField path="serverId" type="string" required>
+  The unique identifier of the server
+</ParamField>
+
+### Authorization
+
+Only the server owner can regenerate the invite code.
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The server object with the new invite code
+</ResponseField>
+
+### Implementation
+
+A new UUID v4 is generated and set as the `inviteCode`.
+
+### Example
+
+```typescript
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/servers/${serverId}/invite-code`, {
+  method: 'PATCH',
+});
+
+const server = await response.json();
+console.log('New invite code:', server.inviteCode);
+```
+
+### Response Example
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "My Server",
+  "imageUrl": "https://utfs.io/f/abc123.png",
+  "inviteCode": "b8f3e9a1-4d7c-4f2e-9b1a-8c5d6e7f8a9b",
+  "profileId": "123e4567-e89b-12d3-a456-426614174000",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T15:45:00.000Z"
+}
+```
+
+Source: `/app/api/servers/[serverId]/invite-code/route.ts:6`
+
+---
+
+## Leave Server
+
+<api>PATCH /api/servers/[serverId]/leave</api>
+
+Remove the authenticated user from a server. The server owner cannot leave their own server.
+
+### Parameters
+
+<ParamField path="serverId" type="string" required>
+  The unique identifier of the server to leave
+</ParamField>
+
+### Authorization
+
+The server owner (user whose `profileId` matches the server's `profileId`) cannot leave their own server. They must delete the server instead.
+
+### Response
+
+<ResponseField name="server" type="Server">
+  The server object after the member has been removed
+</ResponseField>
+
+### Implementation Details
+
+The query explicitly prevents the owner from leaving by using:
+```typescript
+profileId: {
+  not: profile.id,
+}
+```
+
+### Example
+
+```typescript
+const serverId = "550e8400-e29b-41d4-a716-446655440000";
+
+const response = await fetch(`/api/servers/${serverId}/leave`, {
+  method: 'PATCH',
+});
+
+const server = await response.json();
+```
+
+Source: `/app/api/servers/[serverId]/leave/route.ts:5`
+
+---
+
+## Error Responses
+
+### 401 Unauthorized
+
+Returned when the user is not authenticated:
+
+```
+Unauthorized
+```
+
+### 403 Forbidden
+
+Returned when the user doesn't have permission (e.g., trying to update/delete a server they don't own):
+
+```
+Unauthorized
+```
+
+### 400 Bad Request
+
+Returned when required parameters are missing:
+
+```
+Server ID missing
+```
+
+### 500 Internal Server Error
+
+Returned on unexpected server errors:
+
+```
+Internal Error
+```
+
+or
+
+```
+Internal Server Error
+```

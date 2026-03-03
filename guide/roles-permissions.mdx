@@ -1,0 +1,484 @@
+---
+title: 'Roles & Permissions'
+description: 'Understand the role-based access control system in TeamTalker'
+icon: 'shield'
+---
+
+TeamTalker uses a role-based access control system to manage permissions within servers. Every server member is assigned one of three roles: Admin, Moderator, or Guest.
+
+## Role Overview
+
+TeamTalker implements three distinct roles with varying levels of permissions:
+
+<CardGroup cols={3}>
+  <Card title="Admin" icon="shield-halved" color="#f43f5e">
+    Full control over the server
+  </Card>
+  <Card title="Moderator" icon="shield-check" color="#6366f1">
+    Manage members and invites
+  </Card>
+  <Card title="Guest" icon="user" color="#64748b">
+    Basic member access
+  </Card>
+</CardGroup>
+
+<Info>
+  Roles are assigned per server. You can have different roles in different servers.
+</Info>
+
+## The Three Roles
+
+### ADMIN
+
+The highest permission level with complete server control.
+
+**Role Badge**: Red shield icon (ShieldAlert)
+
+**Who Gets This Role:**
+- Server creators automatically become Admins
+- Members promoted by existing Admins
+
+**Visual Indicators:**
+```tsx
+<ShieldAlert className="h-4 w-4 text-rose-500" />
+```
+
+### MODERATOR
+
+Intermediate permission level for trusted members.
+
+**Role Badge**: Indigo shield check icon (ShieldCheck)
+
+**Who Gets This Role:**
+- Members promoted by server Admins
+- Trusted community helpers
+
+**Visual Indicators:**
+```tsx
+<ShieldCheck className="h-4 w-4 ml-2 text-indigo-500" />
+```
+
+### GUEST
+
+Default role for all new server members.
+
+**Role Badge**: No icon displayed
+
+**Who Gets This Role:**
+- All new members joining a server
+- Default role when invited to a server
+- Members demoted from higher roles
+
+**Visual Indicators:**
+No badge is displayed for Guest members.
+
+<Note>
+  The Guest role is the default for all new server members. Permissions increase as members are promoted to Moderator or Admin.
+</Note>
+
+## Admin Permissions
+
+Admins have the highest level of control:
+
+### What Admins Can Do
+
+<AccordionGroup>
+  <Accordion title="Server Management" icon="server">
+    - **Edit Server Settings**: Change server name and image
+    - **Delete Server**: Permanently delete the entire server
+    - **View Server Details**: Access all server configuration
+    
+    Access via the server dropdown menu (top left).
+  </Accordion>
+  
+  <Accordion title="Member Management" icon="users">
+    - **Manage All Members**: View and manage all server members
+    - **Change Member Roles**: Promote/demote between Guest and Moderator
+    - **Kick Members**: Remove members from the server
+    - **View Member Details**: See email addresses and join dates
+    
+    Access via Server Settings → Manage Members.
+  </Accordion>
+  
+  <Accordion title="Invite Management" icon="user-plus">
+    - **Generate Invite Links**: Create invite codes for new members
+    - **Regenerate Invite Codes**: Create new invite links
+    - **Share Invites**: Distribute invite links to prospects
+    
+    Access via Server Settings → Invite People.
+  </Accordion>
+  
+  <Accordion title="Server Ownership" icon="crown">
+    - **Cannot Be Kicked**: Server owner cannot be removed
+    - **Cannot Be Demoted**: Owner always maintains Admin role
+    - **Full Access**: No restrictions on any server features
+  </Accordion>
+</AccordionGroup>
+
+### Admin UI Features
+
+In the server header dropdown, Admins see:
+
+```tsx
+// Available options for Admins
+- Invite People (with UserPlus icon)
+- Server Settings (with Settings icon)
+- Manage Members (with Users icon)
+- Delete Server (with Trash icon)
+```
+
+<Warning>
+  Admins cannot manage their own role or kick themselves. The server owner (profileId matches server.profileId) has permanent Admin status.
+</Warning>
+
+## Moderator Permissions
+
+Moderators have limited management capabilities:
+
+### What Moderators Can Do
+
+<AccordionGroup>
+  <Accordion title="Invite Members" icon="user-plus">
+    - **Generate Invite Links**: Create invite codes for new members
+    - **Share Invites**: Distribute invite links to grow the community
+    - **Access Invite Modal**: Use the same invite interface as Admins
+    
+    Access via Server Settings → Invite People.
+  </Accordion>
+  
+  <Accordion title="Basic Server Access" icon="door-open">
+    - **View All Channels**: Access all server channels
+    - **Participate in Chat**: Send messages and interact
+    - **Leave Server**: Can voluntarily leave the server
+  </Accordion>
+</AccordionGroup>
+
+### What Moderators Cannot Do
+
+<Steps>
+  <Step title="No Member Management">
+    Moderators cannot:
+    - Change member roles
+    - Kick members from the server
+    - View member management interface
+  </Step>
+  
+  <Step title="No Server Settings">
+    Moderators cannot:
+    - Edit server name or image
+    - Delete the server
+    - Access server configuration
+  </Step>
+  
+  <Step title="No Role Assignment">
+    Moderators cannot:
+    - Promote Guests to Moderators
+    - Demote other Moderators
+    - Change any member roles
+  </Step>
+</Steps>
+
+### Moderator UI Features
+
+In the server header dropdown, Moderators see:
+
+```tsx
+// Available options for Moderators
+- Invite People (with UserPlus icon)
+- Leave Server (with LogOut icon)
+```
+
+<Info>
+  Moderators have the same invite permissions as Admins but cannot manage members or server settings.
+</Info>
+
+## Guest Permissions
+
+Guests have basic member access:
+
+### What Guests Can Do
+
+<AccordionGroup>
+  <Accordion title="Basic Participation" icon="comments">
+    - **View Channels**: Access all server channels
+    - **Send Messages**: Participate in conversations
+    - **View Members**: See other server members
+    - **Use Reactions**: React to messages (when implemented)
+  </Accordion>
+  
+  <Accordion title="Leave Server" icon="door-open">
+    - **Voluntary Exit**: Can leave the server at any time
+    - **No Server Deletion**: Cannot delete the entire server
+  </Accordion>
+</AccordionGroup>
+
+### What Guests Cannot Do
+
+- Invite new members to the server
+- Change server settings
+- Manage other members
+- Change anyone's role (including their own)
+- Delete the server
+- Access admin or moderator features
+
+### Guest UI Features
+
+In the server header dropdown, Guests see:
+
+```tsx
+// Available options for Guests
+- Leave Server (with LogOut icon)
+```
+
+<Note>
+  Guests represent the majority of server members and have access to core chat and participation features.
+</Note>
+
+## Role Assignment
+
+Learn how roles are assigned and changed:
+
+### Initial Role Assignment
+
+<Steps>
+  <Step title="Server Creation">
+    When you create a server:
+    - You automatically become the **Admin**
+    - Your role is linked to server ownership
+    - Cannot be changed or removed
+  </Step>
+  
+  <Step title="Joining a Server">
+    When you join via invite link:
+    - You start as a **Guest**
+    - Default role for all new members
+    - Can be promoted by Admins later
+  </Step>
+</Steps>
+
+### Changing Member Roles
+
+Only Admins can change member roles:
+
+<Steps>
+  <Step title="Open Member Management">
+    Admin clicks Server Settings → Manage Members
+  </Step>
+  
+  <Step title="Select a Member">
+    Click the three-dot menu (MoreVertical) next to any member's name
+  </Step>
+  
+  <Step title="Choose New Role">
+    Select from the dropdown:
+    - **Guest**: Demote to basic member
+    - **Moderator**: Promote to moderator status
+  </Step>
+  
+  <Step title="Confirm Change">
+    The role updates immediately and is reflected across the server
+  </Step>
+</Steps>
+
+<Warning>
+  Admins cannot change the role of the server owner. The owner always maintains Admin status.
+</Warning>
+
+### Role Change API
+
+Role changes are processed via:
+
+```bash
+PATCH /api/members/[memberId]?serverId=[serverId]
+```
+
+**Request Body:**
+```json
+{
+  "role": "MODERATOR" // or "GUEST"
+}
+```
+
+**Validation:**
+- Only server Admin can change roles
+- Cannot change server owner's role
+- Cannot change your own role
+
+## Kicking Members
+
+Admins can remove members from the server:
+
+### Kick Process
+
+<Steps>
+  <Step title="Access Member Management">
+    Admin navigates to Manage Members modal
+  </Step>
+  
+  <Step title="Select Member to Kick">
+    Click the three-dot menu next to the target member
+  </Step>
+  
+  <Step title="Choose Kick Option">
+    Select "Kick" from the dropdown menu (Gavel icon)
+  </Step>
+  
+  <Step title="Member Removed">
+    The member is immediately removed from the server
+  </Step>
+</Steps>
+
+### Kick Restrictions
+
+<CardGroup cols={2}>
+  <Card title="Cannot Kick Owner" icon="crown">
+    The server owner cannot be kicked by anyone
+  </Card>
+  <Card title="Cannot Kick Self" icon="user">
+    You cannot kick yourself from the server
+  </Card>
+</CardGroup>
+
+### Kick API
+
+```bash
+DELETE /api/members/[memberId]?serverId=[serverId]
+```
+
+**Authorization:**
+- Requires Admin role
+- Must be the server owner (profileId matches server.profileId)
+- Cannot kick yourself or the server owner
+
+<Info>
+  Kicked members can rejoin if they have a valid invite link, unless additional restrictions are implemented.
+</Info>
+
+## Role Indicators
+
+Roles are visually distinguished throughout the interface:
+
+### Member List Display
+
+In the members modal and server sidebar:
+
+```tsx
+const roleIconMap = {
+  GUEST: null,
+  MODERATOR: <ShieldCheck className="h-4 w-4 ml-2 text-indigo-500" />,
+  ADMIN: <ShieldAlert className="h-4 w-4 text-rose-500" />,
+};
+```
+
+### Color Coding
+
+<CardGroup cols={3}>
+  <Card title="Admin" icon="shield" color="#f43f5e">
+    Rose/Red (#f43f5e)
+  </Card>
+  <Card title="Moderator" icon="shield" color="#6366f1">
+    Indigo/Purple (#6366f1)
+  </Card>
+  <Card title="Guest" icon="user" color="#64748b">
+    No badge color
+  </Card>
+</CardGroup>
+
+### UI Components
+
+Role indicators appear in:
+- Server member lists (next to names)
+- Manage Members modal
+- Member profiles
+- Server sidebar
+
+## Permission Hierarchy
+
+Understand the permission levels:
+
+```
+ADMIN (Highest)
+├─ All Moderator permissions
+├─ Manage server settings
+├─ Manage all members
+├─ Change member roles
+├─ Kick members
+└─ Delete server
+
+MODERATOR (Medium)
+├─ All Guest permissions
+├─ Invite new members
+└─ Generate invite links
+
+GUEST (Basic)
+├─ View channels
+├─ Send messages
+├─ View members
+└─ Leave server
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="For Admins" icon="shield-halved">
+    - Promote trusted members to Moderator carefully
+    - Regularly review member roles
+    - Use the Kick feature responsibly
+    - Communicate role changes to affected members
+    - Keep at least one other trusted Admin
+  </Accordion>
+  
+  <Accordion title="For Moderators" icon="shield-check">
+    - Use invite permissions to grow the community
+    - Report issues to Admins
+    - Help manage community without overstepping
+    - Maintain trust to keep moderator status
+  </Accordion>
+  
+  <Accordion title="For Guests" icon="user">
+    - Participate actively to earn promotions
+    - Follow server rules and guidelines
+    - Respect role boundaries
+    - Ask Admins for role promotions if interested
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  Role promotions are at the discretion of server Admins. Build trust and contribute positively to earn higher roles.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Cannot Change Member Role">
+    - Verify you are an Admin (not Moderator)
+    - Check if the member is the server owner
+    - Ensure you're not trying to change your own role
+    - Verify you own the server (your profileId matches server.profileId)
+  </Accordion>
+  
+  <Accordion title="Cannot Kick Member">
+    - Only Admins can kick members
+    - Cannot kick the server owner
+    - Cannot kick yourself
+    - Check your own role permissions
+  </Accordion>
+  
+  <Accordion title="Role Not Displaying">
+    - Refresh the page to see updated roles
+    - Check the member list for role badges
+    - Verify the role change was successful
+    - Sign out and back in if needed
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/guide/authentication">
+    Learn about user authentication
+  </Card>
+  <Card title="Profile Management" icon="user" href="/guide/profile-management">
+    Manage your user profile
+  </Card>
+</CardGroup>

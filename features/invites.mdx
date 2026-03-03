@@ -1,0 +1,352 @@
+---
+title: "Invitation System"
+description: "Generate invite links and add team members to your TeamTalker servers"
+---
+
+## How Invitations Work
+
+TeamTalker uses a secure invite link system to add new members to servers. Each server has a unique invite code that can be shared with teammates to grant them access to the collaborative canvas.
+
+<Info>
+Only **Admins** and **Moderators** can generate and share invite links. Guests do not have invitation permissions.
+</Info>
+
+## Generating an Invite Link
+
+Create an invite link to add new members to your server:
+
+<Steps>
+  <Step title="Open Server Menu">
+    Click the server name in the header at the top of your screen to open the dropdown menu.
+  </Step>
+  
+  <Step title="Select Invite People">
+    Click **Invite People** from the menu (appears with a user-plus icon). This option is only visible to Admins and Moderators.
+  </Step>
+  
+  <Step title="View the Invite Link">
+    The Invite modal opens displaying:
+    - **Title**: "Invite Friends"
+    - **Label**: "Server invite link"
+    - **Full URL**: The complete invite link in a readonly text field
+    - **Copy Button**: Click to copy the link to your clipboard
+  </Step>
+  
+  <Step title="Share the Link">
+    The invite URL follows this format:
+    ```
+    https://your-domain.com/invite/[unique-invite-code]
+    ```
+    
+    Share this link via email, chat, or any communication method to invite new members.
+  </Step>
+</Steps>
+
+<Note>
+The invite link is generated automatically when you create a server. Each server has a permanent invite code stored in the database.
+</Note>
+
+## Copying Invite Links
+
+The invite modal provides a one-click copy feature:
+
+<Tabs>
+  <Tab title="Copy Process">
+    1. Click the **Copy** button (clipboard icon) next to the invite URL
+    2. The link is copied to your clipboard
+    3. The button icon changes to a **Check** mark for 2 seconds
+    4. Paste the link wherever you need to share it
+    
+    <Info>
+    The check mark confirmation helps you know the link was successfully copied.
+    </Info>
+  </Tab>
+  
+  <Tab title="Manual Copy">
+    You can also manually copy the invite link:
+    
+    1. Click inside the invite URL text field
+    2. Select all the text (Ctrl+A or Cmd+A)
+    3. Copy to clipboard (Ctrl+C or Cmd+C)
+    4. Paste wherever needed
+  </Tab>
+</Tabs>
+
+## Regenerating Invite Codes
+
+<Warning>
+Regenerating an invite code invalidates all previously shared links. Anyone with the old link will no longer be able to join.
+</Warning>
+
+If you need to revoke access or create a fresh invite link:
+
+<Steps>
+  <Step title="Open Invite Modal">
+    Access the invite link interface through the server menu.
+  </Step>
+  
+  <Step title="Click Generate New Link">
+    At the bottom of the modal, click **"Generate a new link"** (appears with a refresh icon).
+  </Step>
+  
+  <Step title="Wait for Generation">
+    The system generates a new UUID-based invite code. A loading spinner may appear briefly during this process.
+  </Step>
+  
+  <Step title="Share the New Link">
+    The invite URL updates automatically with the new code. Copy and share the updated link.
+  </Step>
+</Steps>
+
+<Accordion title="When to Regenerate Invite Codes">
+**Common reasons to generate a new invite link:**
+
+- The invite link was shared publicly or leaked
+- You want to revoke access for people who have the old link
+- You're changing team composition and want to control who can join
+- Security best practice: periodically rotate invite codes
+- After removing members who might still have the old link
+
+**What happens when you regenerate:**
+
+- A new UUID is generated and stored in the database
+- The old invite code becomes invalid immediately
+- Current members remain unaffected
+- Anyone trying to use the old link will be unable to join
+</Accordion>
+
+## Joining a Server via Invite
+
+When someone receives an invite link, here's what happens:
+
+<Steps>
+  <Step title="Click the Invite Link">
+    The recipient clicks the invite URL you shared (e.g., `https://your-domain.com/invite/abc123-def456`).
+  </Step>
+  
+  <Step title="Authentication Check">
+    TeamTalker verifies the user is authenticated with Clerk. If not logged in, they'll be prompted to sign in or create an account.
+  </Step>
+  
+  <Step title="Server Validation">
+    The system checks:
+    - Does the invite code match a valid server?
+    - Is the user already a member of this server?
+  </Step>
+  
+  <Step title="Automatic Join or Redirect">
+    - **Already a Member**: User is redirected to the server canvas
+    - **New Member**: User is automatically added to the server as a **Guest**
+    - **Invalid Code**: User is redirected to the home page
+  </Step>
+  
+  <Step title="Access Granted">
+    New members are redirected to the server canvas and can immediately start collaborating.
+  </Step>
+</Steps>
+
+<Info>
+New members join with the **Guest** role by default. Admins can later promote them to Moderator if needed.
+</Info>
+
+## Invite Link Format
+
+Invite URLs follow a consistent structure:
+
+```
+https://[your-domain]/invite/[unique-uuid]
+```
+
+**Components:**
+
+- **Protocol**: HTTPS for secure transmission
+- **Domain**: Your TeamTalker deployment URL
+- **Path**: `/invite/` route handler
+- **Invite Code**: UUID v4 format (e.g., `a3c5d7e9-1b2c-4d5e-6f7a-8b9c0d1e2f3a`)
+
+<Note>
+The invite code is a UUID stored in the database and is unique per server. Regenerating creates a new UUID and updates the server record.
+</Note>
+
+## Invite Permissions by Role
+
+<CardGroup cols={3}>
+  <Card title="Admin" icon="shield-halved" color="#e11d48">
+    **Full invite control:**
+    - Generate invite links
+    - Copy invite URLs
+    - Regenerate invite codes
+    - Share links with anyone
+  </Card>
+  
+  <Card title="Moderator" icon="shield-check" color="#6366f1">
+    **Invite permissions:**
+    - Generate invite links
+    - Copy invite URLs
+    - Regenerate invite codes
+    - Share links with anyone
+  </Card>
+  
+  <Card title="Guest" icon="user" color="#64748b">
+    **No invite access:**
+    - Cannot access invite modal
+    - Cannot generate links
+    - Cannot share invites
+    - Can only join via existing links
+  </Card>
+</CardGroup>
+
+## Security Considerations
+
+<Warning>
+**Important security practices:**
+
+- Only share invite links with trusted individuals
+- Use private communication channels (not public forums)
+- Regenerate codes if links are shared publicly
+- Review your member list regularly
+- Remove members who no longer need access
+</Warning>
+
+<Accordion title="Invite Link Security Features">
+**Built-in security measures:**
+
+1. **Authentication Required**: Users must be logged in with Clerk to join
+2. **UUID Codes**: Cryptographically secure random invite codes
+3. **One-Time Setup**: Each user can only join once per invite code
+4. **Code Rotation**: Admins/Moderators can regenerate codes anytime
+5. **Database Validation**: All joins are validated against the database
+6. **Profile Association**: Members are linked to verified user profiles
+
+**What invite links cannot do:**
+
+- Grant elevated permissions (new members are always Guests)
+- Bypass authentication
+- Work after code regeneration
+- Be reused if the server is deleted
+</Accordion>
+
+## Sharing Invite Links
+
+Best practices for distributing invite links:
+
+<Tabs>
+  <Tab title="Email">
+    **Sending via email:**
+    
+    1. Copy the invite link from the modal
+    2. Compose an email to your team members
+    3. Paste the link with context:
+       - What the server is for
+       - What they can do on the canvas
+       - Who else is on the team
+    4. Send to recipients
+    
+    **Example message:**
+    ```
+    Hi Team,
+    
+    Join our Design Review server on TeamTalker:
+    https://teamtalker.com/invite/abc123-def456
+    
+    We'll be collaborating on mockups and wireframes.
+    See you on the canvas!
+    ```
+  </Tab>
+  
+  <Tab title="Chat/Slack">
+    **Sharing in team chat:**
+    
+    1. Copy the invite link
+    2. Post in your team channel
+    3. Add brief context about the server
+    4. Tag relevant team members
+    
+    Most chat platforms will auto-link the URL for easy clicking.
+  </Tab>
+  
+  <Tab title="Direct Message">
+    **One-on-one sharing:**
+    
+    1. Copy the invite link
+    2. Send directly to specific individuals
+    3. Provide context about why they're being invited
+    4. Mention their expected role (they'll start as Guest)
+  </Tab>
+</Tabs>
+
+## Troubleshooting Invites
+
+<Accordion title="The invite link doesn't work">
+**Possible causes:**
+
+- The invite code was regenerated (ask for a new link)
+- The server was deleted
+- The user is not authenticated (must log in first)
+- Network connectivity issues
+- Invalid URL format (ensure full URL is copied)
+
+**Solution:** Contact the server Admin for a fresh invite link.
+</Accordion>
+
+<Accordion title="I don't see the Invite People option">
+The "Invite People" menu item is only visible to Admins and Moderators. If you're a Guest:
+
+- You cannot generate invite links
+- Ask an Admin or Moderator to invite others
+- You can request a role upgrade if you need invite permissions
+</Accordion>
+
+<Accordion title="New members aren't appearing">
+If someone joined via invite but doesn't appear in the member list:
+
+1. Refresh the page to update the member list
+2. Check if they successfully completed the join process
+3. Verify they used the correct invite link
+4. Ensure they're logged in to TeamTalker
+5. Check server settings for any issues
+</Accordion>
+
+## Invite Link Lifecycle
+
+<Steps>
+  <Step title="Server Creation">
+    A unique invite code (UUID) is automatically generated when a new server is created.
+  </Step>
+  
+  <Step title="Link Generation">
+    The invite code is combined with your domain to create a shareable URL.
+  </Step>
+  
+  <Step title="Link Sharing">
+    Admins and Moderators copy and distribute the link to intended members.
+  </Step>
+  
+  <Step title="Member Joins">
+    Recipients click the link, authenticate, and are added to the server as Guests.
+  </Step>
+  
+  <Step title="Optional Regeneration">
+    Admins/Moderators can generate new codes to invalidate old links for security.
+  </Step>
+  
+  <Step title="Server Deletion">
+    If the server is deleted, all invite codes become permanently invalid.
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Manage Members" icon="users-gear" href="/features/members">
+    Learn how to change roles and manage server members
+  </Card>
+  
+  <Card title="Server Settings" icon="gear" href="/features/servers">
+    Configure your server name, image, and permissions
+  </Card>
+  
+  <Card title="Start Collaborating" icon="paintbrush" href="/features/canvas">
+    Jump into the canvas and begin whiteboarding with your team
+  </Card>
+</CardGroup>

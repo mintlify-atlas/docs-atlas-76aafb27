@@ -1,0 +1,147 @@
+---
+title: Introduction
+description: Welcome to TeamTalker - A real-time collaborative whiteboarding platform
+---
+
+# Welcome to TeamTalker
+
+TeamTalker is a powerful real-time collaborative whiteboarding tool that enables teams to brainstorm, design, and collaborate together on an infinite canvas. Built with modern web technologies, it provides a seamless experience for distributed teams to work together in real-time.
+
+<Note>
+  TeamTalker combines the power of real-time collaboration with an intuitive whiteboarding experience, making it perfect for remote teams, educators, and creative professionals.
+</Note>
+
+## Key Features
+
+TeamTalker offers a comprehensive set of features designed for modern collaborative workflows:
+
+### Real-Time Collaboration
+- **Live Canvas Synchronization**: All changes are instantly synchronized across all participants using Yjs and WebSocket technology
+- **Multi-User Presence**: See who's online and watch their cursor movements in real-time
+- **Conflict-Free Editing**: Advanced CRDT (Conflict-free Replicated Data Type) technology ensures smooth collaboration without conflicts
+
+### Server-Based Organization
+- **Create Unlimited Servers**: Organize your workspaces by project, team, or topic
+- **Server Management**: Full CRUD operations for servers with image and name customization
+- **Invite System**: Generate shareable invite links to add team members to your servers
+- **Persistent Canvas**: Each server has its own persistent canvas that saves automatically
+
+### Role-Based Access Control
+- **Three-Tier Role System**: Admin, Moderator, and Guest roles for granular permissions
+- **Admin Controls**: Full server management including member management and deletion
+- **Moderator Permissions**: Enhanced collaboration capabilities without full admin access
+- **Member Management**: Kick members or change roles through an intuitive interface
+
+### Professional Whiteboard Tools
+- **tldraw Integration**: Industry-leading whiteboard library with comprehensive drawing tools
+- **Drawing Tools**: Shapes, arrows, text, freehand drawing, and more
+- **File Uploads**: Upload and embed images directly on your canvas
+- **Infinite Canvas**: Unlimited space for your ideas to grow
+- **Dark Mode Support**: Comfortable viewing in any lighting condition
+
+### Authentication & Security
+- **Clerk Authentication**: Enterprise-grade authentication with support for multiple providers
+- **User Profiles**: Manage your profile, view active devices, and change passwords
+- **Secure Sessions**: Protected routes and secure session management
+- **Environment-Based Configuration**: Separate development and production configurations
+
+## Quick Links
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get up and running with TeamTalker in under 5 minutes
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Detailed installation and configuration guide
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore the API endpoints and data models
+  </Card>
+  <Card title="Core Features" icon="sparkles" href="/features/servers">
+    Deep dive into TeamTalker's powerful features
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+TeamTalker is built with a modern, production-ready technology stack:
+
+### Frontend
+- **Next.js 14**: React framework with App Router for optimal performance
+- **TypeScript**: Type-safe development for better code quality
+- **React 18**: Latest React features including concurrent rendering
+- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
+- **shadcn/ui**: Beautiful and accessible component library built on Radix UI
+- **Chakra UI**: Additional UI components for enhanced user experience
+
+### Real-Time Collaboration
+- **tldraw**: Professional-grade whiteboard and canvas library
+- **Yjs**: High-performance CRDT framework for real-time collaboration
+- **y-websocket**: WebSocket provider for Yjs synchronization
+- **WebSocket Server**: Runs on port 1234 for real-time communication
+
+### Backend & Database
+- **PostgreSQL**: Robust relational database for data persistence
+- **Prisma**: Modern ORM with type-safe database access
+- **Next.js API Routes**: Serverless API endpoints for backend logic
+
+### Authentication & File Storage
+- **Clerk**: Complete authentication solution with user management
+- **UploadThing**: Reliable file upload and storage service
+
+### Development Tools
+- **Cypress**: End-to-end testing framework
+- **ESLint**: Code quality and consistency
+- **Concurrently**: Run multiple processes simultaneously
+
+## Architecture Overview
+
+TeamTalker follows a modern full-stack architecture:
+
+```
+Client (Next.js + React)
+    ↓
+    ↕ WebSocket (port 1234)
+    ↓
+Yjs Collaboration Layer
+    ↓
+    ↕ HTTP/API Routes
+    ↓
+Next.js Backend
+    ↓
+Prisma ORM
+    ↓
+PostgreSQL Database
+```
+
+<Tip>
+  The dual-server architecture (Next.js on port 3000 and WebSocket on port 1234) enables optimal separation of concerns between HTTP requests and real-time collaboration.
+</Tip>
+
+## Use Cases
+
+TeamTalker is perfect for:
+
+- **Remote Teams**: Collaborate on diagrams, workflows, and brainstorming sessions
+- **Design Reviews**: Real-time feedback on wireframes and mockups
+- **Education**: Interactive teaching and student collaboration
+- **Project Planning**: Visual project timelines and kanban boards
+- **Workshops**: Facilitate interactive online workshops and training sessions
+
+## What's Next?
+
+<Steps>
+  <Step title="Get Started">
+    Follow our [Quickstart Guide](/quickstart) to create your first server and canvas
+  </Step>
+  <Step title="Set Up Your Environment">
+    Complete the [Installation Guide](/installation) for detailed setup instructions
+  </Step>
+  <Step title="Explore Features">
+    Learn about advanced features and customization options
+  </Step>
+</Steps>
+
+---
+
+Ready to start collaborating? Let's [get started](/quickstart)!

@@ -1,0 +1,200 @@
+---
+title: 'API Overview'
+description: 'TeamTalker REST API documentation and authentication guide'
+---
+
+## Introduction
+
+The TeamTalker API is a RESTful API built with Next.js App Router. It provides endpoints for managing servers, members, and user profiles in the TeamTalker collaboration platform.
+
+## Base URL
+
+All API endpoints are relative to your application's base URL:
+
+```
+https://your-app.com/api
+```
+
+For local development:
+
+```
+http://localhost:3000/api
+```
+
+## Authentication
+
+TeamTalker uses [Clerk](https://clerk.com) for authentication. All API endpoints require authentication via Clerk's session management.
+
+### How Authentication Works
+
+1. User authenticates through Clerk's authentication UI
+2. Clerk manages the session and provides a `userId`
+3. API routes use the `currentProfile()` helper to verify authentication
+4. The user's profile is fetched from the database using the Clerk `userId`
+
+### Authentication Implementation
+
+API routes verify authentication using:
+
+```typescript
+import { currentProfile } from "@/lib/current-profile";
+
+const profile = await currentProfile();
+
+if (!profile) {
+  return new Response("Unauthorized", { status: 401 });
+}
+```
+
+Source: `/lib/current-profile.ts:1`
+
+## API Route Structure
+
+TeamTalker follows Next.js App Router conventions:
+
+- `/api/servers` - Server collection operations
+- `/api/servers/[serverId]` - Individual server operations
+- `/api/members/[memberId]` - Member management
+- `/api/profile` - Current user profile
+
+## Request Format
+
+### Content Type
+
+All POST and PATCH requests must include:
+
+```
+Content-Type: application/json
+```
+
+### Request Body
+
+Request bodies should be valid JSON:
+
+```json
+{
+  "name": "My Server",
+  "imageUrl": "https://example.com/image.png"
+}
+```
+
+## Response Format
+
+### Success Responses
+
+Successful requests return JSON with the relevant data:
+
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "My Server",
+  "imageUrl": "https://example.com/image.png",
+  "inviteCode": "abc123",
+  "profileId": "123e4567-e89b-12d3-a456-426614174000",
+  "createdAt": "2024-01-15T10:30:00.000Z",
+  "updatedAt": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### HTTP Status Codes
+
+<ResponseField name="200" type="OK">
+  Request succeeded. Returns the requested resource.
+</ResponseField>
+
+<ResponseField name="401" type="Unauthorized">
+  Authentication failed. User is not logged in or session is invalid.
+</ResponseField>
+
+<ResponseField name="403" type="Forbidden">
+  User is authenticated but doesn't have permission for this operation.
+</ResponseField>
+
+<ResponseField name="400" type="Bad Request">
+  Missing required parameters or invalid request format.
+</ResponseField>
+
+<ResponseField name="500" type="Internal Server Error">
+  Server encountered an unexpected error.
+</ResponseField>
+
+## Error Handling
+
+### Error Response Format
+
+Error responses return plain text messages:
+
+```
+Unauthorized
+```
+
+```
+Server ID missing
+```
+
+```
+Internal Error
+```
+
+### Common Error Messages
+
+<ResponseField name="Unauthorized">
+  Returned when the user is not authenticated (401)
+</ResponseField>
+
+<ResponseField name="Server ID missing">
+  Returned when a required serverId parameter is not provided (400)
+</ResponseField>
+
+<ResponseField name="Member ID missing">
+  Returned when a required memberId parameter is not provided (400)
+</ResponseField>
+
+<ResponseField name="Internal Error">
+  Returned when an unexpected server error occurs (500)
+</ResponseField>
+
+<ResponseField name="Internal Server Error">
+  Alternate message for unexpected server errors (500)
+</ResponseField>
+
+## Database
+
+TeamTalker uses [Prisma](https://prisma.io) as the ORM with PostgreSQL as the database.
+
+### Key Models
+
+- **Profile** - User profiles linked to Clerk accounts
+- **Server** - Collaboration servers/workspaces
+- **Member** - Server membership with role-based permissions
+
+## Real-time Features
+
+In addition to the REST API, TeamTalker uses:
+
+- **WebSocket** connections via y-websocket on port 1234
+- **Yjs** for real-time collaborative canvas synchronization
+- **tldraw** for the collaborative drawing/whiteboard interface
+
+See [Real-time Sync](/api/real-time-sync) for details.
+
+## Rate Limiting
+
+Currently, TeamTalker does not implement rate limiting. Consider implementing rate limiting for production deployments.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Server Endpoints" icon="server" href="/api/servers">
+    Manage servers, invites, and memberships
+  </Card>
+  <Card title="Member Endpoints" icon="users" href="/api/members">
+    Update member roles and remove members
+  </Card>
+  <Card title="Profile Endpoint" icon="user" href="/api/profile">
+    Get current user profile information
+  </Card>
+  <Card title="Database Schema" icon="database" href="/api/database-schema">
+    Explore the data models and relationships
+  </Card>
+</CardGroup>

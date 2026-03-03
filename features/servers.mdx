@@ -1,0 +1,157 @@
+---
+title: "Server Management"
+description: "Create and manage TeamTalker servers for collaborative whiteboarding"
+---
+
+## What are Servers?
+
+Servers in TeamTalker are collaborative workspaces where teams can create and share whiteboards. Each server has its own members, settings, and unique invite system. Think of servers as project spaces or team hubs where real-time collaboration happens.
+
+<Note>
+Every server automatically creates a shared canvas where all members can collaborate simultaneously using the tldraw whiteboard.
+</Note>
+
+## Creating a New Server
+
+Get started by creating your first TeamTalker server:
+
+<Steps>
+  <Step title="Open the Create Server Modal">
+    Click the **Plus (+)** button in the navigation sidebar on the left side of your screen. This button appears at the top of your server list with a green hover effect.
+  </Step>
+  
+  <Step title="Upload a Server Image">
+    Click the upload area to add a server image that represents your workspace. This image will appear in the navigation sidebar and helps you quickly identify your server.
+    
+    <Info>
+    The server image is required. Choose something recognizable like a team logo or project icon.
+    </Info>
+  </Step>
+  
+  <Step title="Enter Server Name">
+    Provide a descriptive name for your server (e.g., "Design Team", "Q1 Planning", "Product Mockups"). The server name appears in the header and helps members identify the workspace.
+  </Step>
+  
+  <Step title="Click Create">
+    Once you've added an image and name, click the **Create** button. Your new server will be created and you'll be automatically redirected to the server's canvas.
+  </Step>
+</Steps>
+
+<Note>
+When you create a server, you automatically become the **Admin** with full permissions to manage settings, members, and invites.
+</Note>
+
+## Server Navigation
+
+The navigation sidebar displays all servers you're a member of:
+
+- **Server Icons**: Each server appears as a circular icon with its custom image
+- **Active Server**: The currently selected server is highlighted
+- **Quick Switching**: Click any server icon to instantly switch between workspaces
+- **User Profile**: Your Clerk user profile appears at the bottom of the sidebar
+
+## Managing Server Settings
+
+<Accordion title="Editing Server Details (Admin Only)">
+Admins can update the server name and image at any time:
+
+1. Click the server name header at the top of the screen
+2. Select **Server Settings** from the dropdown menu
+3. Update the server image by clicking the upload area
+4. Modify the server name in the text field
+5. Click **Update** to save your changes
+
+The server will refresh automatically with your new settings.
+</Accordion>
+
+<Accordion title="Server Permissions by Role">
+TeamTalker uses three member roles with different permissions:
+
+| Permission | Admin | Moderator | Guest |
+|------------|-------|-----------|-------|
+| Create server | Yes | No | No |
+| Edit server settings | Yes | No | No |
+| Delete server | Yes | No | No |
+| Invite members | Yes | Yes | No |
+| Manage members | Yes | No | No |
+| Use canvas | Yes | Yes | Yes |
+| Leave server | No* | Yes | Yes |
+
+*Admins cannot leave their own server - they must delete it or transfer ownership first.
+</Accordion>
+
+## Deleting a Server
+
+<Warning>
+Deleting a server is permanent and cannot be undone. All canvas data and member associations will be permanently removed.
+</Warning>
+
+Only server Admins can delete servers:
+
+<Steps>
+  <Step title="Open Server Menu">
+    Click the server name header to open the dropdown menu.
+  </Step>
+  
+  <Step title="Select Delete Server">
+    Click **Delete Server** (appears in red text at the bottom of the menu).
+  </Step>
+  
+  <Step title="Confirm Deletion">
+    A confirmation dialog will appear showing the server name. Click **Confirm** to permanently delete the server, or **Cancel** to abort.
+  </Step>
+</Steps>
+
+After deletion, you'll be redirected to your home page.
+
+## Leaving a Server
+
+Non-admin members (Moderators and Guests) can leave servers they no longer wish to participate in:
+
+1. Click the server name header
+2. Select **Leave Server** from the dropdown menu
+3. Confirm your decision in the dialog
+
+You'll need a new invite link to rejoin the server after leaving.
+
+<Info>
+Server Admins cannot leave their own servers. To stop managing a server, you must either delete it or change another member to Admin and then have them remove you.
+</Info>
+
+## Server Header Menu
+
+The server header provides quick access to all server management features:
+
+<CardGroup cols={2}>
+  <Card title="Invite People" icon="user-plus">
+    Generate and share invite links (Admin & Moderator only)
+  </Card>
+  
+  <Card title="Server Settings" icon="gear">
+    Update server name and image (Admin only)
+  </Card>
+  
+  <Card title="Manage Members" icon="users">
+    View members, change roles, and remove users (Admin only)
+  </Card>
+  
+  <Card title="Delete Server" icon="trash">
+    Permanently remove the server (Admin only)
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Invite Team Members" icon="link" href="/features/invites">
+    Learn how to generate invite links and add people to your server
+  </Card>
+  
+  <Card title="Manage Members" icon="users-gear" href="/features/members">
+    Understand member roles and permissions
+  </Card>
+  
+  <Card title="Use the Canvas" icon="paintbrush" href="/features/canvas">
+    Start collaborating on the whiteboard
+  </Card>
+</CardGroup>

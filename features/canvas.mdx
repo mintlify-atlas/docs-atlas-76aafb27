@@ -1,0 +1,223 @@
+---
+title: "Collaborative Canvas"
+description: "Real-time whiteboarding powered by tldraw and Yjs"
+---
+
+## Introduction to the Canvas
+
+The TeamTalker canvas is a powerful collaborative whiteboard where team members can draw, sketch, and brainstorm together in real-time. Every server has its own dedicated canvas that all members can access and edit simultaneously.
+
+<Info>
+The canvas uses **tldraw**, a modern infinite canvas library, combined with **Yjs** for real-time synchronization via WebSocket connections.
+</Info>
+
+## Real-Time Collaboration Features
+
+### Live User Presence
+
+See exactly who's working on the canvas with you:
+
+- **User Cursors**: Each collaborator's cursor appears on the canvas in their chosen color
+- **Name Display**: Hover over a cursor to see the user's name
+- **Active Indicators**: Know who's currently viewing and editing the canvas
+- **Automatic Sync**: Changes appear instantly for all connected users
+
+<Note>
+User presence is powered by Yjs awareness, which tracks each user's cursor position, selection, and activity in real-time.
+</Note>
+
+### Shared Canvas State
+
+All canvas data is synchronized across all members:
+
+- **Drawings**: Shapes, lines, and freehand drawings
+- **Text**: Text boxes and annotations
+- **Positions**: Object placements and arrangements
+- **Zoom & Pan**: Each user can navigate independently while sharing the same content
+
+## Canvas Tools & Controls
+
+The tldraw canvas provides a comprehensive set of drawing tools:
+
+<Tabs>
+  <Tab title="Drawing Tools">
+    - **Select Tool**: Click and drag to select objects
+    - **Draw Tool**: Freehand drawing and sketching
+    - **Eraser**: Remove objects from the canvas
+    - **Arrow**: Create directional arrows
+    - **Line**: Draw straight lines
+    - **Rectangle**: Create rectangular shapes
+    - **Ellipse**: Draw circles and ovals
+    - **Text**: Add text annotations
+  </Tab>
+  
+  <Tab title="Navigation">
+    - **Pan**: Hold spacebar and drag to move around the canvas
+    - **Zoom**: Use scroll wheel or pinch to zoom in/out
+    - **Fit to Screen**: Reset view to fit all content
+    - **Infinite Canvas**: Unlimited space for your ideas
+  </Tab>
+  
+  <Tab title="Object Controls">
+    - **Resize**: Drag handles to resize shapes
+    - **Rotate**: Use rotation handles on selected objects
+    - **Duplicate**: Copy and paste objects
+    - **Group**: Combine multiple objects
+    - **Layer Order**: Bring to front or send to back
+  </Tab>
+</Tabs>
+
+## Personalizing Your Presence
+
+### User Color Picker
+
+Each user can customize their cursor and selection color to make collaboration clearer:
+
+<Steps>
+  <Step title="Locate the Color Picker">
+    In the top-right corner of the canvas, you'll find a color input control next to the server name display.
+  </Step>
+  
+  <Step title="Choose Your Color">
+    Click the color picker to open a color selection dialog. Choose a color that represents you and helps others identify your cursors and selections.
+  </Step>
+  
+  <Step title="See Your Updates">
+    Your cursor, selection highlights, and activity indicators will immediately update to your chosen color.
+  </Step>
+</Steps>
+
+<Info>
+Your color preference is stored locally and synced with other users through Yjs awareness. Other collaborators will see your cursor and selections in your chosen color.
+</Info>
+
+### User Name Display
+
+Your display name on the canvas comes from your Clerk profile:
+
+- The canvas automatically uses your profile name
+- Other users see your name when hovering over your cursor
+- Your name appears in the share zone at the top of the canvas
+
+## Server Name Display
+
+The canvas header shows the current server name to help you identify which workspace you're in:
+
+- Format: `[Server Name] Server`
+- Displayed in the top-right area of the canvas
+- Helps with orientation when switching between multiple servers
+
+## Mobile Support
+
+The canvas is accessible on mobile devices:
+
+- **Mobile Toggle**: A hamburger menu button appears on smaller screens
+- **Responsive Layout**: The canvas adapts to different screen sizes
+- **Touch Controls**: Draw with your finger or stylus
+- **Sidebar Access**: Toggle server and member sidebars on mobile
+
+<Note>
+The mobile toggle component allows you to access the navigation and server sidebars on smaller screens where they're hidden by default.
+</Note>
+
+## WebSocket Synchronization
+
+The canvas uses WebSocket connections for real-time updates:
+
+### Connection Status
+
+<Tabs>
+  <Tab title="Connected">
+    - **Status**: `synced-remote` with `online` connection
+    - All changes sync instantly with other users
+    - User cursors and presence updates in real-time
+    - Full collaborative functionality available
+  </Tab>
+  
+  <Tab title="Disconnected">
+    - **Status**: `synced-remote` with `offline` connection
+    - You can continue working on the canvas
+    - Changes are queued locally
+    - Automatic reconnection attempts in progress
+    - Changes sync when connection is restored
+  </Tab>
+  
+  <Tab title="Loading">
+    - **Status**: `loading`
+    - Initial connection being established
+    - Canvas data being fetched
+    - Wait for sync to complete before editing
+  </Tab>
+</Tabs>
+
+### Connection Details
+
+- **Development**: Connects to `ws://localhost:1234`
+- **Production**: Connects to `wss://170.187.203.33:1234`
+- **Room ID**: Each server has a unique room ID (the server's ID)
+- **Auto-Reconnect**: Automatically attempts to reconnect if disconnected
+
+## Data Persistence
+
+Canvas data is stored and synchronized through:
+
+<Accordion title="Yjs Document Storage">
+- **Y.Doc**: Each server has a dedicated Yjs document
+- **Garbage Collection**: Enabled to optimize memory usage
+- **YKeyValue Store**: Canvas records stored as key-value pairs
+- **Array Format**: Data stored in `tl_[serverId]` array
+- **Transaction-Based**: All changes are atomic and consistent
+</Accordion>
+
+<Accordion title="Default Canvas State">
+New servers start with a default canvas configuration:
+
+- Pre-configured store snapshot
+- Default shape utilities
+- Standard tool settings
+- Initial user preferences (dark mode enabled)
+</Accordion>
+
+## Collaboration Workflows
+
+<CardGroup cols={2}>
+  <Card title="Brainstorming" icon="lightbulb">
+    Team members can simultaneously add ideas, draw connections, and organize thoughts in real-time
+  </Card>
+  
+  <Card title="Design Review" icon="pen-ruler">
+    Collaboratively mark up designs, add annotations, and provide visual feedback directly on the canvas
+  </Card>
+  
+  <Card title="Planning" icon="diagram-project">
+    Create flowcharts, diagrams, and visual roadmaps together with instant updates for everyone
+  </Card>
+  
+  <Card title="Teaching" icon="chalkboard-user">
+    Instructors can draw and explain concepts while students follow along in real-time
+  </Card>
+</CardGroup>
+
+## Tips for Effective Collaboration
+
+1. **Choose Distinct Colors**: Pick unique colors to make it easy to identify who's doing what
+2. **Use Text Labels**: Add text annotations to clarify drawings and ideas
+3. **Organize Spatially**: Group related content in different canvas areas
+4. **Communicate**: Use the member list to see who's online and collaborate intentionally
+5. **Save Often**: While changes sync automatically, the canvas state persists in the Yjs document
+
+<Warning>
+If you delete a server, all canvas data is permanently lost. Make sure to export or save important work before deletion.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Invite Collaborators" icon="user-plus" href="/features/invites">
+    Add team members to start collaborating on the canvas
+  </Card>
+  
+  <Card title="Manage Members" icon="users" href="/features/members">
+    Control who has access to your collaborative workspace
+  </Card>
+</CardGroup>

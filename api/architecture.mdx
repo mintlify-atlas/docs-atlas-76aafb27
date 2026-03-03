@@ -1,0 +1,524 @@
+---
+title: 'Technical Architecture'
+description: 'System architecture, tech stack, and component overview for TeamTalker'
+---
+
+## Overview
+
+TeamTalker is a real-time collaboration platform built with Next.js, featuring server management, role-based permissions, and a collaborative canvas powered by Yjs and tldraw.
+
+## Tech Stack
+
+### Frontend
+
+<CardGroup cols={2}>
+  <Card title="Next.js 14" icon="react">
+    React framework with App Router
+  </Card>
+  <Card title="React 18" icon="react">
+    UI library for building components
+  </Card>
+  <Card title="tldraw" icon="pen">
+    Collaborative whiteboard/canvas (v2.0.0-alpha.18)
+  </Card>
+  <Card title="Chakra UI" icon="palette">
+    Component library for UI elements
+  </Card>
+</CardGroup>
+
+### Backend
+
+<CardGroup cols={2}>
+  <Card title="Next.js API Routes" icon="server">
+    RESTful API endpoints
+  </Card>
+  <Card title="Prisma" icon="database">
+    ORM for database management
+  </Card>
+  <Card title="PostgreSQL" icon="database">
+    Primary database
+  </Card>
+  <Card title="y-websocket" icon="signal">
+    WebSocket server for real-time sync
+  </Card>
+</CardGroup>
+
+### Authentication & Storage
+
+<CardGroup cols={2}>
+  <Card title="Clerk" icon="lock">
+    User authentication and session management
+  </Card>
+  <Card title="UploadThing" icon="cloud-arrow-up">
+    File upload service
+  </Card>
+</CardGroup>
+
+### Real-time Collaboration
+
+<CardGroup cols={2}>
+  <Card title="Yjs" icon="code-merge">
+    CRDT for conflict-free collaboration
+  </Card>
+  <Card title="WebSocket" icon="signal">
+    Real-time communication layer
+  </Card>
+</CardGroup>
+
+---
+
+## Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────┐
+│               Frontend (React/Next.js)              │
+│   ┌──────────────┐  ┌─────────────────────────┐   │
+│   │ UI Components│  │ Collaborative Canvas    │   │
+│   │ (Chakra UI)  │  │ (tldraw)                │   │
+│   └──────────────┘  └─────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+                      │         │
+                      ▼         ▼
+┌──────────────────────┐  ┌────────────────────────┐
+│   REST API Layer     │  │  Real-time WebSocket   │
+│  (Next.js Routes)    │  │  (y-websocket:1234)    │
+│                      │  │                        │
+│  /api/servers        │  │  Yjs Document Sync     │
+│  /api/members        │  │  Presence Awareness    │
+│  /api/profile        │  │                        │
+└──────────────────────┘  └────────────────────────┘
+          │                         │
+          ▼                         ▼
+┌─────────────────────────────────────────────────────┐
+│              Business Logic Layer                   │
+│  ┌──────────────┐  ┌──────────────────────────┐   │
+│  │ Clerk Auth   │  │ Prisma ORM               │   │
+│  │ Validation   │  │ Database Queries         │   │
+│  └──────────────┘  └──────────────────────────┘   │
+└─────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────┐
+│              Data Layer (PostgreSQL)                │
+│   Profile │ Server │ Member                        │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+## Application Structure
+
+### Directory Layout
+
+```
+source/
+├── app/
+│   ├── api/                    # API routes
+│   │   ├── servers/
+│   │   │   ├── route.ts        # GET, POST /api/servers
+│   │   │   └── [serverId]/
+│   │   │       ├── route.ts    # GET, PATCH, DELETE /api/servers/:id
+│   │   │       ├── invite-code/
+│   │   │       │   └── route.ts # PATCH invite code
+│   │   │       └── leave/
+│   │   │           └── route.ts # PATCH leave server
+│   │   ├── members/
+│   │   │   └── [memberId]/
+│   │   │       └── route.ts    # PATCH, DELETE members
+│   │   ├── profile/
+│   │   │   └── route.ts        # GET /api/profile
+│   │   └── uploadthing/
+│   │       ├── route.ts        # UploadThing handler
+│   │       └── core.ts         # UploadThing config
+│   └── (routes)/               # Page components
+├── lib/
+│   ├── current-profile.ts      # Auth helper
+│   └── db.ts                   # Prisma client
+├── prisma/
+│   └── schema.prisma           # Database schema
+├── useYjsStore.ts              # Real-time sync hook
+└── default_store.ts            # Default canvas state
+```
+
+---
+
+## API Routes Architecture
+
+### REST API Structure
+
+All API routes follow Next.js App Router conventions:
+
+```typescript
+// Example: /app/api/servers/route.ts
+export const GET = async (req: Request) => { /* ... */ }
+export const POST = async (req: Request) => { /* ... */ }
+
+// Example: /app/api/servers/[serverId]/route.ts
+export const GET = async (
+  req: Request,
+  { params }: { params: { serverId: string } }
+) => { /* ... */ }
+```
+
+### Authentication Flow
+
+```typescript
+import { currentProfile } from "@/lib/current-profile";
+
+export const GET = async (req: Request) => {
+  // 1. Verify authentication
+  const profile = await currentProfile();
+  if (!profile) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  // 2. Perform authorized operation
+  const data = await db.server.findMany({
+    where: {
+      members: {
+        some: { profileId: profile.id },
+      },
+    },
+  });
+
+  // 3. Return response
+  return NextResponse.json(data);
+};
+```
+
+Source: `/app/api/servers/route.ts:36`
+
+---
+
+## Database Architecture
+
+### Prisma ORM
+
+TeamTalker uses Prisma as the database ORM with PostgreSQL.
+
+```typescript
+// lib/db.ts
+import { PrismaClient } from "@prisma/client";
+
+export const db = new PrismaClient();
+```
+
+### Schema Design
+
+See [Database Schema](/api/database-schema) for complete details.
+
+Key models:
+- **Profile** - User accounts (linked to Clerk)
+- **Server** - Collaboration workspaces
+- **Member** - Server memberships with roles
+
+### Relationships
+
+```
+Profile ──┬── owns ──► Server
+          └── joins ──► Member ──► Server
+```
+
+---
+
+## Real-time Layer
+
+### WebSocket Server
+
+The WebSocket server runs on port 1234 alongside Next.js:
+
+```json
+{
+  "dev": "concurrently \"next\" \"set HOST=127.0.0.1&& set PORT=1234 && npx y-websocket\" --kill-others"
+}
+```
+
+Source: `package.json:6`
+
+### Yjs Integration
+
+Yjs provides CRDT-based synchronization:
+
+```typescript
+const yDoc = new Y.Doc({ gc: true });
+const yStore = new YKeyValue(
+  yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`)
+);
+
+const room = new WebsocketProvider(
+  hostUrl,
+  roomId,
+  yDoc,
+  { connect: true }
+);
+```
+
+Source: `/useYjsStore.ts:47`
+
+### Data Flow
+
+1. **User Action** → tldraw store
+2. **Store Change** → Yjs document (via listener)
+3. **Yjs Document** → WebSocket server
+4. **WebSocket Server** → Other clients
+5. **Other Clients** → Update their tldraw stores
+
+See [Real-time Sync](/api/real-time-sync) for detailed documentation.
+
+---
+
+## Authentication System
+
+### Clerk Integration
+
+TeamTalker uses Clerk for authentication:
+
+```typescript
+import { auth } from "@clerk/nextjs";
+import { db } from "@/lib/db";
+
+export const currentProfile = async () => {
+  const { userId } = auth();
+
+  if (!userId) {
+    return null;
+  }
+
+  const profile = await db.profile.findUnique({
+    where: { userId },
+  });
+
+  return profile;
+};
+```
+
+Source: `/lib/current-profile.ts:4`
+
+### Authentication Flow
+
+1. User signs in via Clerk UI
+2. Clerk creates session
+3. API routes call `currentProfile()`
+4. Profile is fetched from database using `userId`
+5. Authorization checks are performed
+
+---
+
+## File Upload System
+
+### UploadThing Integration
+
+TeamTalker uses UploadThing for image uploads:
+
+```typescript
+// app/api/uploadthing/core.ts
+import { createUploadthing } from "uploadthing/next";
+
+const f = createUploadthing();
+
+export const ourFileRouter = {
+  serverImage: f({ image: { maxFileSize: "4MB" } })
+    .middleware(async ({ req }) => {
+      const profile = await currentProfile();
+      if (!profile) throw new Error("Unauthorized");
+      return { userId: profile.userId };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Upload complete for userId:", metadata.userId);
+      console.log("file url", file.url);
+    }),
+};
+```
+
+Used for:
+- Server images/icons
+- User profile pictures
+
+---
+
+## State Management
+
+### Client State
+
+TeamTalker uses multiple state management approaches:
+
+<ResponseField name="React State" type="useState, useEffect">
+  Local component state
+</ResponseField>
+
+<ResponseField name="tldraw Store" type="TLStore">
+  Canvas state managed by tldraw
+</ResponseField>
+
+<ResponseField name="Yjs Document" type="Y.Doc">
+  Shared collaborative state
+</ResponseField>
+
+<ResponseField name="Zustand" type="Store (optional)">
+  Global state management (available but not heavily used)
+</ResponseField>
+
+---
+
+## UI Components
+
+### Component Libraries
+
+From `package.json:13`:
+
+- **Chakra UI** - Primary component library
+- **Radix UI** - Headless components (accordion, avatar, dialog, dropdown, etc.)
+- **Flowbite** - Additional UI components
+- **Lucide React** - Icon library
+
+### Styling
+
+- **Tailwind CSS** - Utility-first CSS framework
+- **Emotion** - CSS-in-JS (for Chakra UI)
+- **clsx** - Class name utilities
+- **tailwind-merge** - Merge Tailwind classes
+
+---
+
+## Development Workflow
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Run development server (Next.js + WebSocket)
+npm run dev
+
+# Prisma commands
+npx prisma generate       # Generate Prisma Client
+npx prisma migrate dev    # Run migrations
+npx prisma studio         # Open database GUI
+```
+
+### Production Build
+
+```bash
+# Build application
+npm run build
+
+# Start production server (Next.js + WebSocket)
+npm start
+
+# Apply migrations
+npx prisma migrate deploy
+```
+
+---
+
+## Testing
+
+From `package.json:66`:
+
+<ResponseField name="Cypress" type="E2E Testing">
+  End-to-end testing framework
+</ResponseField>
+
+<ResponseField name="Jest" type="Unit Testing">
+  Unit and integration tests
+</ResponseField>
+
+<ResponseField name="Testing Library" type="Component Testing">
+  React component testing utilities
+</ResponseField>
+
+```bash
+# Run Cypress E2E tests
+npm run cypress:open
+```
+
+---
+
+## Security Considerations
+
+### Authentication
+
+- All API routes verify authentication via Clerk
+- Profile lookup prevents unauthorized access
+- Session management handled by Clerk
+
+### Authorization
+
+- Server ownership checks (`profileId` matching)
+- Role-based permissions (ADMIN, MODERATOR, GUEST)
+- Cannot modify own role or remove self (server owner)
+
+### Database
+
+- Cascade deletes prevent orphaned records
+- Unique constraints on `userId` and `inviteCode`
+- Indexes for performance on foreign keys
+
+---
+
+## Performance Optimizations
+
+### Database
+
+- Indexes on `profileId` and `serverId` for faster queries
+- Efficient Prisma queries with `include` for joins
+- Connection pooling via Prisma
+
+### Real-time
+
+- Yjs garbage collection to prevent memory bloat
+- `requestAnimationFrame` for batched presence updates
+- Local-only changes ignored in Yjs listeners
+
+### Frontend
+
+- Next.js automatic code splitting
+- React 18 concurrent rendering
+- Image optimization via Next.js Image component
+
+---
+
+## Deployment Architecture
+
+### Required Services
+
+1. **Next.js Application** (Vercel, AWS, etc.)
+2. **PostgreSQL Database** (Supabase, AWS RDS, etc.)
+3. **WebSocket Server** (port 1234)
+4. **Clerk Authentication** (SaaS)
+5. **UploadThing** (SaaS)
+
+### Environment Variables
+
+```env
+# Database
+DATABASE_URL=postgresql://...
+
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
+CLERK_SECRET_KEY=sk_...
+
+# UploadThing
+UPLOADTHING_SECRET=sk_...
+UPLOADTHING_APP_ID=app_...
+```
+
+---
+
+## Related Documentation
+
+<CardGroup cols={2}>
+  <Card title="API Overview" icon="book" href="/api/overview">
+    API structure and authentication
+  </Card>
+  <Card title="Database Schema" icon="database" href="/api/database-schema">
+    Data models and relationships
+  </Card>
+  <Card title="Real-time Sync" icon="signal" href="/api/real-time-sync">
+    WebSocket and Yjs synchronization
+  </Card>
+  <Card title="Server Endpoints" icon="server" href="/api/servers">
+    Server management API
+  </Card>
+</CardGroup>

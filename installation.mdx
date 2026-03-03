@@ -1,0 +1,645 @@
+---
+title: Installation
+description: Complete installation and configuration guide for TeamTalker
+---
+
+# Installation Guide
+
+This comprehensive guide covers everything you need to set up TeamTalker, from prerequisites to production deployment. Follow these steps for a complete installation.
+
+## Prerequisites
+
+Before installing TeamTalker, ensure you have the following installed:
+
+### Required Software
+
+- **Node.js**: Version 20.x or higher
+- **npm**: Version 9.x or higher (comes with Node.js)
+- **PostgreSQL**: Version 14 or higher
+- **Git**: For cloning the repository
+
+<CodeGroup>
+```bash Verify Node.js
+node --version
+# Should output: v20.x.x or higher
+```
+
+```bash Verify npm
+npm --version
+# Should output: 9.x.x or higher
+```
+
+```bash Verify PostgreSQL
+psql --version
+# Should output: psql (PostgreSQL) 14.x or higher
+```
+</CodeGroup>
+
+<Note>
+  If you need to install Node.js, download it from [nodejs.org](https://nodejs.org/). We recommend using the LTS (Long Term Support) version.
+</Note>
+
+### Third-Party Services
+
+You'll need accounts for these services:
+
+1. **Clerk** - Authentication provider ([clerk.com](https://clerk.com))
+2. **UploadThing** - File upload service ([uploadthing.com](https://uploadthing.com))
+3. **PostgreSQL Database** - Can be local or cloud-hosted (e.g., Railway, Neon, Supabase)
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the TeamTalker repository from GitHub:
+
+    ```bash
+    git clone https://github.com/Temiloluwa-Ogundiran/teamtalker.git
+    cd teamtalker
+    ```
+
+    <Tip>
+      If you're planning to contribute or customize TeamTalker, consider forking the repository first.
+    </Tip>
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all project dependencies using npm:
+
+    ```bash
+    npm install
+    ```
+
+    This installs all packages defined in `package.json`, including:
+
+    **Core Framework:**
+    - `next@^14.0.1` - Next.js framework
+    - `react@^18` - React library
+    - `typescript@^5` - TypeScript compiler
+
+    **Real-Time Collaboration:**
+    - `@tldraw/tldraw@^2.0.0-alpha.18` - Whiteboard canvas
+    - `yjs@^13.6.10` - CRDT framework
+    - `y-websocket@^1.5.0` - WebSocket provider
+    - `y-utility@^0.1.3` - Yjs utilities
+
+    **Database & ORM:**
+    - `@prisma/client@^5.6.0` - Prisma client
+    - `prisma@^5.6.0` - Prisma CLI (dev dependency)
+
+    **Authentication:**
+    - `@clerk/nextjs@^4.27.1` - Clerk authentication
+
+    **File Uploads:**
+    - `uploadthing@^6.13.3` - UploadThing server
+    - `@uploadthing/react@^6.8.0` - UploadThing React components
+
+    **UI Libraries:**
+    - `@chakra-ui/react@^2.8.2` - Chakra UI
+    - `@radix-ui/*` - Radix UI primitives
+    - `tailwindcss@^3.3.0` - Tailwind CSS
+    - `lucide-react@^0.292.0` - Icon library
+
+    <Warning>
+      The installation may take several minutes. Ensure you have a stable internet connection.
+    </Warning>
+  </Step>
+
+  <Step title="Set Up PostgreSQL Database">
+    Create a PostgreSQL database for TeamTalker:
+
+    <CodeGroup>
+    ```bash Local PostgreSQL
+    # Connect to PostgreSQL
+    psql -U postgres
+
+    # Create database
+    CREATE DATABASE teamtalker;
+
+    # Create user (optional)
+    CREATE USER teamtalker_user WITH PASSWORD 'your_secure_password';
+
+    # Grant privileges
+    GRANT ALL PRIVILEGES ON DATABASE teamtalker TO teamtalker_user;
+
+    # Exit psql
+    \q
+    ```
+
+    ```bash Using Docker
+    # Run PostgreSQL in Docker
+    docker run --name teamtalker-db \
+      -e POSTGRES_PASSWORD=your_password \
+      -e POSTGRES_DB=teamtalker \
+      -p 5432:5432 \
+      -d postgres:14
+    ```
+    </CodeGroup>
+
+    ### Cloud Database Options
+
+    <CardGroup cols={3}>
+      <Card title="Railway" icon="train" href="https://railway.app">
+        Easy PostgreSQL deployment with generous free tier
+      </Card>
+      <Card title="Neon" icon="database" href="https://neon.tech">
+        Serverless PostgreSQL with branching
+      </Card>
+      <Card title="Supabase" icon="bolt" href="https://supabase.com">
+        PostgreSQL with built-in features
+      </Card>
+    </CardGroup>
+  </Step>
+
+  <Step title="Configure Clerk Authentication">
+    Set up Clerk for user authentication:
+
+    1. **Create a Clerk Account**
+       - Go to [clerk.com](https://clerk.com) and sign up
+       - Create a new application
+
+    2. **Configure Authentication Methods**
+       - Enable Email/Password authentication
+       - Optionally enable OAuth providers (Google, GitHub, etc.)
+
+    3. **Get Your API Keys**
+       - Navigate to "API Keys" in your Clerk dashboard
+       - Copy your Publishable Key and Secret Key
+
+    4. **Configure Redirect URLs**
+       - Add `http://localhost:3000` to allowed origins for development
+       - Configure sign-in and sign-up URLs
+
+    <Note>
+      Clerk provides a complete authentication solution including user management, password reset, and multi-factor authentication.
+    </Note>
+  </Step>
+
+  <Step title="Set Up UploadThing">
+    Configure UploadThing for file uploads:
+
+    1. **Create an UploadThing Account**
+       - Visit [uploadthing.com](https://uploadthing.com)
+       - Sign up and create a new app
+
+    2. **Get Your API Keys**
+       - Copy your Secret Key and App ID from the dashboard
+
+    3. **Configure File Upload Settings**
+       - The app is configured to accept:
+         - **Server Images**: Max 4MB, 1 file
+         - **Message Files**: Images and PDFs
+
+    <Tip>
+      UploadThing automatically handles file storage, CDN distribution, and optimization.
+    </Tip>
+  </Step>
+
+  <Step title="Create Environment Variables">
+    Create a `.env` file in the project root with all required environment variables:
+
+    ```bash .env
+    # ============================================
+    # Clerk Authentication Configuration
+    # ============================================
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
+    CLERK_SECRET_KEY=sk_test_your_secret_here
+
+    # Clerk Redirect URLs
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+
+    # ============================================
+    # Database Configuration
+    # ============================================
+    # Format: postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+    DATABASE_URL=postgresql://teamtalker_user:your_password@localhost:5432/teamtalker
+
+    # For cloud databases, use their connection string:
+    # DATABASE_URL=postgresql://user:pass@region.provider.com:5432/database
+
+    # ============================================
+    # UploadThing File Upload Configuration
+    # ============================================
+    UPLOADTHING_SECRET=sk_live_your_secret_key
+    UPLOADTHING_APP_ID=your_app_id
+
+    # ============================================
+    # Optional: WebSocket Configuration
+    # ============================================
+    # The WebSocket server runs on port 1234 by default
+    # These are set in the dev script but can be overridden:
+    # HOST=127.0.0.1
+    # PORT=1234
+    ```
+
+    <Warning>
+      **Security Best Practices:**
+      - Never commit `.env` files to version control
+      - Use different credentials for development and production
+      - Rotate secrets regularly
+      - Add `.env` to your `.gitignore` (already configured)
+    </Warning>
+
+    ### Environment Variable Reference
+
+    | Variable | Required | Description |
+    |----------|----------|-------------|
+    | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Clerk public API key (safe for client) |
+    | `CLERK_SECRET_KEY` | Yes | Clerk secret API key (server-only) |
+    | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | Yes | Sign-in page route |
+    | `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | Yes | Sign-up page route |
+    | `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | Yes | Redirect after sign-in |
+    | `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | Yes | Redirect after sign-up |
+    | `DATABASE_URL` | Yes | PostgreSQL connection string |
+    | `UPLOADTHING_SECRET` | Yes | UploadThing secret key |
+    | `UPLOADTHING_APP_ID` | Yes | UploadThing application ID |
+  </Step>
+
+  <Step title="Initialize Prisma and Database">
+    Set up your database schema using Prisma:
+
+    ```bash
+    # Generate Prisma Client based on schema.prisma
+    npx prisma generate
+
+    # Apply database migrations
+    npx prisma migrate deploy
+
+    # Alternative: Create and apply a new migration
+    npx prisma migrate dev --name init
+    ```
+
+    ### Database Schema
+
+    TeamTalker uses three main models:
+
+    **Profile Model:**
+    ```prisma
+    model Profile {
+      id        String   @id @default(uuid())
+      userId    String   @unique
+      name      String
+      imageUrl  String
+      email     String
+      createdAt DateTime @default(now())
+      updatedAt DateTime @updatedAt
+      members   Member[]
+      server    Server[]
+    }
+    ```
+
+    **Server Model:**
+    ```prisma
+    model Server {
+      id         String   @id @default(uuid())
+      name       String
+      imageUrl   String
+      inviteCode String   @unique
+      profileId  String
+      createdAt  DateTime @default(now())
+      updatedAt  DateTime @updatedAt
+      members    Member[]
+      profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    }
+    ```
+
+    **Member Model:**
+    ```prisma
+    model Member {
+      id        String     @id @default(uuid())
+      role      MemberRole @default(GUEST)
+      profileId String
+      serverId  String
+      createdAt DateTime   @default(now())
+      updatedAt DateTime   @updatedAt
+      profile   Profile    @relation(fields: [profileId], references: [id], onDelete: Cascade)
+      server    Server     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+    }
+
+    enum MemberRole {
+      ADMIN
+      MODERATOR
+      GUEST
+    }
+    ```
+
+    <Tip>
+      Use `npx prisma studio` to launch a visual database browser at `http://localhost:5555`
+    </Tip>
+  </Step>
+
+  <Step title="Start the Development Server">
+    Launch both the Next.js application and WebSocket server:
+
+    ```bash
+    npm run dev
+    ```
+
+    This command runs:
+    ```json
+    "concurrently \"next\" \"set HOST=127.0.0.1&& set PORT=1234 && npx y-websocket\" --kill-others"
+    ```
+
+    **What's Running:**
+    - **Next.js Dev Server**: `http://localhost:3000`
+      - Frontend application
+      - API routes (under `/api/*`)
+      - Hot module replacement
+
+    - **Y-WebSocket Server**: `ws://localhost:1234`
+      - Real-time collaboration
+      - Yjs CRDT synchronization
+      - Multi-user presence
+
+    <Note>
+      Both servers must be running for full functionality. The `concurrently` package manages both processes.
+    </Note>
+  </Step>
+
+  <Step title="Verify Installation">
+    Test your installation:
+
+    1. **Open the Application**
+       ```
+       http://localhost:3000
+       ```
+
+    2. **Check Authentication**
+       - You should be redirected to Clerk's sign-in page
+       - Create a test account
+       - Verify successful login
+
+    3. **Test Database Connection**
+       ```bash
+       npx prisma studio
+       ```
+       - Navigate to `http://localhost:5555`
+       - You should see your database tables
+
+    4. **Test WebSocket Connection**
+       - Open browser DevTools → Network tab
+       - Filter by "WS" (WebSocket)
+       - You should see a WebSocket connection to `ws://localhost:1234`
+
+    <Tip>
+      Open multiple browser windows to test real-time collaboration!
+    </Tip>
+  </Step>
+</Steps>
+
+## Production Deployment
+
+For production deployment, additional steps are required:
+
+### Build for Production
+
+```bash
+# Create optimized production build
+npm run build
+
+# Start production server
+npm start
+```
+
+### Production Environment Variables
+
+Update your environment variables for production:
+
+```bash .env.production
+# Use production Clerk keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_SECRET_KEY=sk_live_...
+
+# Production database URL
+DATABURL=postgresql://user:pass@production-host:5432/teamtalker
+
+# Production UploadThing keys
+UPLOADTHING_SECRET=sk_live_...
+UPLOADTHING_APP_ID=...
+```
+
+### WebSocket Configuration
+
+In production, update the WebSocket URL in `app/servers/[serverId]/page.tsx:14-16`:
+
+```typescript
+const HOST_URL =
+  process.env.NODE_ENV === "development"
+    ? "ws://localhost:1234"
+    : "wss://your-production-domain.com:1234"; // Update this
+```
+
+<Warning>
+  Ensure your production WebSocket server uses WSS (WebSocket Secure) for encrypted connections.
+</Warning>
+
+### Deployment Platforms
+
+<CardGroup cols={2}>
+  <Card title="Vercel" icon="triangle" href="https://vercel.com">
+    Deploy Next.js app (note: WebSocket server needs separate hosting)
+  </Card>
+  <Card title="Railway" icon="train" href="https://railway.app">
+    Deploy both Next.js and WebSocket server
+  </Card>
+  <Card title="Render" icon="server" href="https://render.com">
+    Full-stack deployment with PostgreSQL
+  </Card>
+  <Card title="Heroku" icon="cloud" href="https://heroku.com">
+    Traditional platform for full deployment
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+<AccordionGroup>
+  <Accordion title="Database Connection Errors">
+    **Error**: `Can't reach database server`
+
+    **Solutions**:
+    1. Verify PostgreSQL is running:
+       ```bash
+       # On macOS/Linux
+       pg_isready
+
+       # Check PostgreSQL status
+       sudo systemctl status postgresql
+       ```
+
+    2. Check your `DATABASE_URL` format:
+       ```
+       postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+       ```
+
+    3. Ensure the database exists:
+       ```bash
+       psql -U postgres -l
+       ```
+
+    4. Test connection manually:
+       ```bash
+       psql "postgresql://user:pass@localhost:5432/teamtalker"
+       ```
+  </Accordion>
+
+  <Accordion title="Prisma Client Issues">
+    **Error**: `Prisma Client is not configured`
+
+    **Solutions**:
+    1. Regenerate Prisma Client:
+       ```bash
+       npx prisma generate
+       ```
+
+    2. Clear node_modules and reinstall:
+       ```bash
+       rm -rf node_modules
+       npm install
+       npx prisma generate
+       ```
+
+    3. Ensure `@prisma/client` version matches `prisma` version in `package.json`
+  </Accordion>
+
+  <Accordion title="Clerk Authentication Errors">
+    **Error**: `Clerk: Missing publishable key`
+
+    **Solutions**:
+    1. Verify environment variables are set:
+       ```bash
+       echo $NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+       ```
+
+    2. Restart the dev server after adding environment variables
+
+    3. Check that variables start with `NEXT_PUBLIC_` for client-side access
+
+    4. Verify Clerk dashboard domain configuration matches your localhost URL
+  </Accordion>
+
+  <Accordion title="WebSocket Connection Failed">
+    **Error**: `WebSocket connection to 'ws://localhost:1234' failed`
+
+    **Solutions**:
+    1. Verify WebSocket server is running:
+       ```bash
+       # Check if port 1234 is in use
+       lsof -i :1234
+       ```
+
+    2. Check firewall settings (Windows/macOS/Linux)
+
+    3. Verify the `HOST` and `PORT` in the dev script:
+       ```json
+       "dev": "concurrently \"next\" \"set HOST=127.0.0.1&& set PORT=1234 && npx y-websocket\""
+       ```
+
+    4. Test WebSocket server directly:
+       ```bash
+       npx y-websocket
+       ```
+  </Accordion>
+
+  <Accordion title="File Upload Errors">
+    **Error**: `UploadThing: Unauthorized`
+
+    **Solutions**:
+    1. Verify UploadThing credentials:
+       ```bash
+       echo $UPLOADTHING_SECRET
+       echo $UPLOADTHING_APP_ID
+       ```
+
+    2. Check UploadThing dashboard for API key status
+
+    3. Ensure domain is whitelisted in UploadThing settings
+
+    4. Verify file size doesn't exceed limits (4MB for server images)
+  </Accordion>
+
+  <Accordion title="TypeScript Errors">
+    **Error**: Type errors during development
+
+    **Solutions**:
+    1. Regenerate TypeScript types:
+       ```bash
+       npx prisma generate
+       npm run build
+       ```
+
+    2. Clear Next.js cache:
+       ```bash
+       rm -rf .next
+       npm run dev
+       ```
+
+    3. Ensure TypeScript version is ^5:
+       ```bash
+       npm list typescript
+       ```
+  </Accordion>
+
+  <Accordion title="Port Already in Use">
+    **Error**: `Port 3000/1234 is already in use`
+
+    **Solutions**:
+    ```bash
+    # Kill process on port 3000
+    npx kill-port 3000
+
+    # Kill process on port 1234
+    npx kill-port 1234
+
+    # Or find and kill manually
+    lsof -ti:3000 | xargs kill -9
+    lsof -ti:1234 | xargs kill -9
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Testing
+
+Run the test suite to verify your installation:
+
+```bash
+# Run Cypress end-to-end tests
+npm run cypress:open
+```
+
+This opens Cypress Test Runner where you can:
+- Run integration tests
+- Test real-time collaboration
+- Verify authentication flows
+- Test server and member management
+
+<Tip>
+  Write tests for any custom features you add to ensure they work correctly!
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Quick 5-minute setup guide
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore API endpoints and models
+  </Card>
+  <Card title="Core Features" icon="sparkles" href="/features/servers">
+    Explore TeamTalker's features
+  </Card>
+  <Card title="Architecture" icon="laptop-code" href="/api/architecture">
+    Learn about the codebase structure
+  </Card>
+</CardGroup>
+
+---
+
+<Note>
+  Need help? Check our [GitHub Issues](https://github.com/Temiloluwa-Ogundiran/teamtalker/issues) or refer to the [Quickstart Guide](/quickstart) for a faster setup path.
+</Note>

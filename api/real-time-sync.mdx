@@ -1,0 +1,474 @@
+---
+title: 'Real-time Synchronization'
+description: 'WebSocket-based collaborative canvas sync with Yjs and tldraw'
+---
+
+## Overview
+
+TeamTalker implements real-time collaborative canvas synchronization using:
+
+- **Yjs** - CRDT-based data structure for conflict-free real-time collaboration
+- **y-websocket** - WebSocket provider for Yjs synchronization
+- **tldraw** - Collaborative whiteboard/canvas library
+- **WebSocket server** - Running on port 1234 for real-time sync
+
+## Architecture
+
+The real-time sync system consists of three main components:
+
+1. **WebSocket Server** - Broadcasts changes between clients
+2. **Yjs Document** - Shared data structure with CRDT conflict resolution
+3. **tldraw Store** - Canvas state and drawing operations
+
+```
+Client A ─────┐
+              ├──► WebSocket Server (port 1234) ──► Yjs Document
+Client B ─────┤                                            │
+              │                                            ▼
+Client C ─────┘                                     tldraw Canvas
+```
+
+---
+
+## useYjsStore Hook
+
+The `useYjsStore` hook manages real-time synchronization between the local tldraw store and the shared Yjs document.
+
+Source: `/useYjsStore.ts:24`
+
+### Parameters
+
+<ParamField name="roomId" type="string" required>
+  Unique identifier for the collaboration room
+</ParamField>
+
+<ParamField name="hostUrl" type="string" required>
+  WebSocket server URL (e.g., `ws://localhost:1234`)
+</ParamField>
+
+<ParamField name="shapeUtils" type="TLAnyShapeUtilConstructor[]" optional>
+  Custom shape utilities for tldraw (default: [])
+</ParamField>
+
+### Returns
+
+<ResponseField name="storeWithStatus" type="TLStoreWithStatus">
+  tldraw store with connection status
+</ResponseField>
+
+<Expandable title="TLStoreWithStatus">
+  <ResponseField name="status" type="'loading' | 'synced-remote'">
+    Current sync status
+  </ResponseField>
+  <ResponseField name="connectionStatus" type="'online' | 'offline'" optional>
+    WebSocket connection status (only when status is 'synced-remote')
+  </ResponseField>
+  <ResponseField name="store" type="TLStore" optional>
+    tldraw store instance (only when status is 'synced-remote')
+  </ResponseField>
+</Expandable>
+
+### Usage Example
+
+```typescript
+import { useYjsStore } from '@/useYjsStore';
+import { Tldraw } from '@tldraw/tldraw';
+
+function CollaborativeCanvas({ serverId }) {
+  const store = useYjsStore({
+    roomId: serverId,
+    hostUrl: 'ws://localhost:1234',
+  });
+
+  return <Tldraw store={store} />;
+}
+```
+
+---
+
+## WebSocket Server
+
+The WebSocket server runs alongside the Next.js application to handle real-time synchronization.
+
+### Server Configuration
+
+From `package.json:6`:
+
+```json
+{
+  "dev": "concurrently \"next\" \"set HOST=127.0.0.1&& set PORT=1234 && npx y-websocket\" --kill-others",
+  "start": "concurrently \"next start\" \"set HOST=127.0.0.1&& set PORT=1234 && npx y-websocket\" --kill-others"
+}
+```
+
+### Connection Details
+
+<ParamField name="Host" type="string">
+  127.0.0.1 (localhost)
+</ParamField>
+
+<ParamField name="Port" type="number">
+  1234
+</ParamField>
+
+<ParamField name="Protocol" type="string">
+  WebSocket (ws://)
+</ParamField>
+
+The WebSocket server runs concurrently with the Next.js dev server and is automatically started/stopped together.
+
+---
+
+## Document Synchronization
+
+The `useYjsStore` hook implements bidirectional synchronization between the local tldraw store and the shared Yjs document.
+
+### Store → Yjs Document Sync
+
+When users make changes to the canvas:
+
+```typescript
+store.listen(
+  function syncStoreChangesToYjsDoc({ changes }) {
+    yDoc.transact(() => {
+      Object.values(changes.added).forEach((record) => {
+        yStore.set(record.id, record);
+      });
+
+      Object.values(changes.updated).forEach(([_, record]) => {
+        yStore.set(record.id, record);
+      });
+
+      Object.values(changes.removed).forEach((record) => {
+        yStore.delete(record.id);
+      });
+    });
+  },
+  { source: "user", scope: "document" }
+);
+```
+
+Source: `/useYjsStore.ts:71`
+
+### Yjs Document → Store Sync
+
+When remote changes arrive:
+
+```typescript
+const handleChange = (
+  changes: Map<string, { action: 'delete' | 'update' | 'add'; ... }>,
+  transaction: Y.Transaction
+) => {
+  if (transaction.local) return;
+
+  const toRemove: TLRecord["id"][] = [];
+  const toPut: TLRecord[] = [];
+
+  changes.forEach((change, id) => {
+    switch (change.action) {
+      case "add":
+      case "update": {
+        const record = yStore.get(id)!;
+        toPut.push(record);
+        break;
+      }
+      case "delete": {
+        toRemove.push(id as TLRecord["id"]);
+        break;
+      }
+    }
+  });
+
+  store.mergeRemoteChanges(() => {
+    if (toRemove.length) store.remove(toRemove);
+    if (toPut.length) store.put(toPut);
+  });
+};
+```
+
+Source: `/useYjsStore.ts:92`
+
+---
+
+## Presence Awareness
+
+The system tracks user presence and cursor positions using Yjs awareness.
+
+### User Presence Setup
+
+```typescript
+const yClientId = room.awareness.clientID.toString();
+setUserPreferences({ id: yClientId });
+
+const userPreferences = computed("userPreferences", () => {
+  const user = getUserPreferences();
+  return {
+    id: user.id,
+    color: user.color ?? defaultUserPreferences.color,
+    name: user.name ?? defaultUserPreferences.name,
+  };
+});
+```
+
+Source: `/useYjsStore.ts:133`
+
+### Presence Derivation
+
+```typescript
+const presenceId = InstancePresenceRecordType.createId(yClientId);
+const presenceDerivation = createPresenceStateDerivation(
+  userPreferences,
+  presenceId
+)(store);
+
+room.awareness.setLocalStateField("presence", presenceDerivation.value);
+```
+
+Source: `/useYjsStore.ts:150`
+
+### Syncing Presence Changes
+
+Local presence changes are broadcast to other clients:
+
+```typescript
+react("when presence changes", () => {
+  const presence = presenceDerivation.value;
+  requestAnimationFrame(() => {
+    room.awareness.setLocalStateField("presence", presence);
+  });
+});
+```
+
+Source: `/useYjsStore.ts:161`
+
+### Receiving Remote Presence
+
+```typescript
+const handleUpdate = (update: {
+  added: number[];
+  updated: number[];
+  removed: number[];
+}) => {
+  const states = room.awareness.getStates() as Map<
+    number,
+    { presence: TLInstancePresence }
+  >;
+
+  const toRemove: TLInstancePresence["id"][] = [];
+  const toPut: TLInstancePresence[] = [];
+
+  for (const clientId of update.added) {
+    const state = states.get(clientId);
+    if (state?.presence && state.presence.id !== presenceId) {
+      toPut.push(state.presence);
+    }
+  }
+
+  for (const clientId of update.updated) {
+    const state = states.get(clientId);
+    if (state?.presence && state.presence.id !== presenceId) {
+      toPut.push(state.presence);
+    }
+  }
+
+  for (const clientId of update.removed) {
+    toRemove.push(
+      InstancePresenceRecordType.createId(clientId.toString())
+    );
+  }
+
+  store.mergeRemoteChanges(() => {
+    if (toRemove.length) store.remove(toRemove);
+    if (toPut.length) store.put(toPut);
+  });
+};
+```
+
+Source: `/useYjsStore.ts:170`
+
+---
+
+## Store Initialization
+
+When a client first connects, the store is initialized with either:
+
+1. **Existing Yjs data** (if the room has existing content)
+2. **Default store** (if the room is empty)
+
+### Loading Existing Content
+
+```typescript
+if (yStore.yarray.length) {
+  // Replace the store records with the yjs doc records
+  transact(() => {
+    store.clear();
+    const records = yStore.yarray.toJSON().map(({ val }) => val);
+    store.put(records);
+  });
+} else {
+  // Create the initial store records
+  yDoc.transact(() => {
+    for (const record of store.allRecords()) {
+      yStore.set(record.id, record);
+    }
+  });
+}
+```
+
+Source: `/useYjsStore.ts:217`
+
+### Default Store
+
+The default store is loaded from:
+
+```typescript
+import { DEFAULT_STORE } from "@/default_store";
+
+const store = createTLStore({
+  shapeUtils: [...defaultShapeUtils, ...shapeUtils],
+});
+store.loadSnapshot(DEFAULT_STORE);
+```
+
+Source: `/useYjsStore.ts:34`
+
+---
+
+## Connection Status
+
+The hook tracks connection status and updates the store accordingly.
+
+### Status States
+
+<ResponseField name="loading">
+  Initial state while connecting and syncing
+</ResponseField>
+
+<ResponseField name="synced-remote (online)">
+  Connected and actively syncing with the server
+</ResponseField>
+
+<ResponseField name="synced-remote (offline)">
+  Disconnected but retaining local state
+</ResponseField>
+
+### Status Change Handler
+
+```typescript
+function handleStatusChange({
+  status,
+}: {
+  status: "disconnected" | "connected";
+}) {
+  if (status === "disconnected") {
+    setStoreWithStatus({
+      store,
+      status: "synced-remote",
+      connectionStatus: "offline",
+    });
+    return;
+  }
+
+  if (status === "connected") {
+    if (hasConnectedBefore) return;
+    hasConnectedBefore = true;
+    room.on("synced", handleSync);
+  }
+}
+```
+
+Source: `/useYjsStore.ts:244`
+
+---
+
+## Data Structure
+
+The Yjs document uses a key-value store for tldraw records:
+
+```typescript
+const yDoc = new Y.Doc({ gc: true });
+const yArr = yDoc.getArray<{ key: string; val: TLRecord }>(`tl_${roomId}`);
+const yStore = new YKeyValue(yArr);
+```
+
+Source: `/useYjsStore.ts:47`
+
+### Record Types
+
+tldraw uses various record types:
+
+- **Shape records** - Drawing shapes (rectangles, lines, etc.)
+- **Instance records** - Canvas state (zoom, pan, selection)
+- **Presence records** - User cursors and selections
+- **Page records** - Canvas pages
+- **Asset records** - Embedded images and files
+
+---
+
+## Conflict Resolution
+
+Yjs uses CRDT (Conflict-free Replicated Data Types) to automatically resolve conflicts when multiple users edit simultaneously.
+
+### How CRDTs Work
+
+1. **Commutative operations** - Operations can be applied in any order
+2. **Idempotent** - Applying the same operation multiple times has the same effect
+3. **Associative** - Order of merging doesn't affect the result
+
+This means TeamTalker handles concurrent edits without requiring manual conflict resolution.
+
+---
+
+## Performance Considerations
+
+### Garbage Collection
+
+```typescript
+const yDoc = new Y.Doc({ gc: true });
+```
+
+Garbage collection is enabled to clean up deleted content and prevent memory bloat.
+
+### RequestAnimationFrame
+
+Presence updates use `requestAnimationFrame` to batch updates and avoid excessive re-renders:
+
+```typescript
+requestAnimationFrame(() => {
+  room.awareness.setLocalStateField("presence", presence);
+});
+```
+
+---
+
+## Dependencies
+
+From `package.json:29`:
+
+```json
+{
+  "@tldraw/tldraw": "^2.0.0-alpha.18",
+  "y-utility": "^0.1.3",
+  "y-websocket": "^1.5.0",
+  "yjs": "^13.6.10"
+}
+```
+
+---
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Server Endpoints" icon="server" href="/api/servers">
+    Server management for collaboration rooms
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/api/architecture">
+    System architecture overview
+  </Card>
+  <Card title="Yjs Documentation" icon="book" href="https://docs.yjs.dev">
+    Official Yjs documentation
+  </Card>
+  <Card title="tldraw Documentation" icon="pen" href="https://tldraw.dev">
+    Official tldraw documentation
+  </Card>
+</CardGroup>
